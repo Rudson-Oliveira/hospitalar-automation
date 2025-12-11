@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Autonomia da Equipe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 Evolução da Autonomia</h1>
+        <p class="text-gray-600 mb-8">Acompanhe como sua equipe está migrando de tarefas operacionais para estratégicas.</p>
+
+        <!-- Cards de Resumo -->
+        <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                <h3 class="text-gray-500 text-sm uppercase">Tarefas Automatizadas</h3>
+                <p class="text-4xl font-bold text-gray-800">1,240</p>
+                <p class="text-green-500 text-sm">▲ 12% essa semana</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                <h3 class="text-gray-500 text-sm uppercase">Horas Economizadas</h3>
+                <p class="text-4xl font-bold text-gray-800">145h</p>
+                <p class="text-gray-400 text-sm">Equivalente a 3.5 funcionários</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
+                <h3 class="text-gray-500 text-sm uppercase">Nível Médio de Autonomia</h3>
+                <p class="text-4xl font-bold text-gray-800">42%</p>
+                <p class="text-purple-500 text-sm">Meta: 90%</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
+                <h3 class="text-gray-500 text-sm uppercase">Novos Padrões Aprendidos</h3>
+                <p class="text-4xl font-bold text-gray-800">18</p>
+                <p class="text-gray-400 text-sm">Hoje</p>
+            </div>
+        </div>
+
+        <!-- Tabela de Colaboradores -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colaborador</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fase Atual</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso da IA</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarefas Delegadas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">JS</div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">João Silva</div>
+                                    <div class="text-sm text-gray-500">Vendas</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Fase 2: Copilot</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 65%"></div>
+                            </div>
+                            <span class="text-xs text-gray-500">65% Autônomo</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            342 / mês
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-indigo-600 hover:text-indigo-900">Ver Detalhes</button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold">MA</div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">Maria Alves</div>
+                                    <div class="text-sm text-gray-500">Financeiro</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Fase 3: Autopilot</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 92%"></div>
+                            </div>
+                            <span class="text-xs text-gray-500">92% Autônomo</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            890 / mês
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-indigo-600 hover:text-indigo-900">Ver Detalhes</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

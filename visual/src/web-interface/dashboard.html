@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Board - CEO Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+    <!-- Header -->
+    <header class="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-400">🤖 The Board <span class="text-sm text-gray-400">| Sistema Multi-Agente Autônomo</span></h1>
+        <div class="flex gap-4">
+            <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">● Sistema Online</span>
+            <button class="bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm font-bold">PARADA DE EMERGÊNCIA</button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-12 gap-4 p-6 h-screen">
+        
+        <!-- Coluna Esquerda: KPIs em Tempo Real -->
+        <div class="col-span-3 space-y-4">
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-gray-400 text-sm uppercase">Saúde Financeira (Hoje)</h3>
+                <p class="text-3xl font-bold text-green-400">R$ 12.450,00</p>
+                <p class="text-xs text-green-600">▲ 15% vs ontem</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-gray-400 text-sm uppercase">Risco de Churn</h3>
+                <p class="text-3xl font-bold text-yellow-400">2.4%</p>
+                <p class="text-xs text-gray-500">Estável</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-gray-400 text-sm uppercase">Decisões Autônomas</h3>
+                <p class="text-3xl font-bold text-blue-400">42</p>
+                <p class="text-xs text-gray-500">Últimas 24h</p>
+            </div>
+        </div>
+
+        <!-- Coluna Central: Sala de Reunião (Chat) -->
+        <div class="col-span-6 bg-gray-800 rounded-lg border border-gray-700 flex flex-col">
+            <div class="p-4 border-b border-gray-700 bg-gray-850">
+                <h2 class="font-bold text-lg">💬 Sala de Reunião Virtual</h2>
+                <p class="text-xs text-gray-400">Acompanhe as discussões dos agentes em tempo real</p>
+            </div>
+            <div id="chat-log" class="flex-1 p-4 overflow-y-auto space-y-3 font-mono text-sm">
+            <!-- WebSocket Script -->
+            <script>
+                const chatLog = document.getElementById('chat-log');
+                const ws = new WebSocket('ws://localhost:3002');
+
+                ws.onmessage = (event) => {
+                    const payload = JSON.parse(event.data);
+                    
+                    if (payload.type === 'NEW_MESSAGE') {
+                        addMessage(payload.data);
+                    } else if (payload.type === 'HISTORY') {
+                        chatLog.innerHTML = ''; // Limpar mock
+                        payload.data.forEach(addMessage);
+                    }
+                };
+
+                function addMessage(msg) {
+                    const div = document.createElement('div');
+                    div.className = 'flex gap-2';
+                    div.innerHTML = `
+                        <span class="text-blue-400 font-bold">[${msg.from}]</span>
+                        <span class="text-gray-300">${msg.content}</span>
+                        <span class="text-xs text-gray-600 ml-auto">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                    `;
+                    chatLog.appendChild(div);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+            </script>
+                <!-- Exemplo de Log -->
+                <div class="flex gap-2">
+                    <span class="text-purple-400 font-bold">[SCOUT]</span>
+                    <span class="text-gray-300">Detectei anomalia no servidor de e-mail. Fila > 500.</span>
+                </div>
+                <div class="flex gap-2">
+                    <span class="text-blue-400 font-bold">[TECH]</span>
+                    <span class="text-gray-300">Reiniciando serviço postfix... Feito. Fila drenando.</span>
+                </div>
+                <div class="flex gap-2">
+                    <span class="text-yellow-400 font-bold">[ALPHA]</span>
+                    <span class="text-gray-300">Bom trabalho. Scout, monitore por mais 30min.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Pendências para o CEO -->
+        <div class="col-span-3 bg-gray-800 rounded-lg border border-gray-700 p-4">
+            <h2 class="font-bold text-lg mb-4 text-red-400">⚠️ Escalonado para Você</h2>
+            
+            <div class="space-y-3">
+                <div class="bg-gray-700 p-3 rounded border-l-4 border-red-500">
+                    <h4 class="font-bold text-sm">Aprovação de Orçamento</h4>
+                    <p class="text-xs text-gray-300 mt-1">Growth quer aumentar budget de Ads em R$ 5.000 para Black Friday.</p>
+                    <div class="mt-2 flex gap-2">
+                        <button class="bg-green-600 text-xs px-2 py-1 rounded hover:bg-green-500">Aprovar</button>
+                        <button class="bg-red-600 text-xs px-2 py-1 rounded hover:bg-red-500">Negar</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-700 p-3 rounded border-l-4 border-yellow-500">
+                    <h4 class="font-bold text-sm">Mudança Estratégica</h4>
+                    <p class="text-xs text-gray-300 mt-1">Alpha sugere pausar campanha "Inverno" devido ao calor.</p>
+                    <div class="mt-2 flex gap-2">
+                        <button class="bg-green-600 text-xs px-2 py-1 rounded hover:bg-green-500">Aprovar</button>
+                        <button class="bg-red-600 text-xs px-2 py-1 rounded hover:bg-red-500">Negar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,28 +1,40 @@
 {
-  "name": "visual",
-  "version": "1.0.0",
+  "name": "hospitalar-automation-visual",
+  "version": "2.0.0",
   "main": "index.js",
+  
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/index.ts",
     "interact": "ts-node src/interactive.ts",
     "dev:interactive": "ts-node src/interactive.ts",
-    "web": "ts-node src/web-interface/server.ts"
+    "web": "ts-node src/web-interface/server.ts",
+    "sim:basic": "ts-node src/agents/simulation.ts",
+    "sim:advanced": "ts-node src/agents/simulation_v2.ts",
+    "sim:full": "ts-node src/agents/full_simulation.ts",
+    "sim:twin": "ts-node src/agents/twin_simulation.ts",
+    "sim:hierarchy": "ts-node src/agents/hierarchy_simulation.ts",
+    "dashboard": "ts-node src/web-interface/dashboard-server.ts"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "automation",
+    "hospital",
+    "ai",
+    "multi-agent"
+  ],
+  "author": "Manus AI",
   "license": "ISC",
-  "description": "",
+  "description": "Sistema de Automação Hospitalar com IA Multi-Agente",
   "dependencies": {
     "@types/express": "^4.17.21",
-    "@types/node": "^25.0.0",
+    "@types/node": "^20.11.0",
     "@types/ws": "^8.5.10",
-    "dotenv": "^17.2.3",
+    "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "ghost-cursor": "^1.4.1",
-    "playwright": "^1.57.0",
+    "playwright": "^1.41.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
+    "typescript": "^5.3.3",
     "ws": "^8.16.0"
   }
 }
