@@ -36,8 +36,49 @@ wss.on('connection', (ws) => {
         if (data.type === 'command') {
             await executeCommand(data.command, ws);
         }
+
+        if (data.type === 'click_coordinate') {
+            await executeClickCoordinate(data.x, data.y, ws);
+        }
     });
 });
+
+async function executeClickCoordinate(xPercent: number, yPercent: number, ws: WebSocket) {
+    if (!page) {
+        ws.send(JSON.stringify({ type: 'log', message: 'Navegador não iniciado.', level: 'error' }));
+        return;
+    }
+
+    try {
+        const viewport = page.viewportSize();
+        if (!viewport) return;
+
+        const realX = viewport.width * xPercent;
+        const realY = viewport.height * yPercent;
+
+        ws.send(JSON.stringify({ 
+            type: 'log', 
+            message: `Clicando em X:${Math.round(realX)} Y:${Math.round(realY)}`, 
+            level: 'info' 
+        }));
+
+        // Move cursor e clica
+        if (cursor) {
+            await cursor.move({ x: realX, y: realY });
+            await cursor.click();
+        } else {
+            await page.mouse.click(realX, realY);
+        }
+
+        // Atualiza screenshot após clique
+        await new Promise(r => setTimeout(r, 1000)); // Espera reação da UI
+        const imageData = await page.screenshot({ encoding: 'base64' });
+        ws.send(JSON.stringify({ type: 'screenshot', image: `data:image/png;base64,${imageData}` }));
+
+    } catch (error) {
+        ws.send(JSON.stringify({ type: 'log', message: `Erro no clique: ${error}`, level: 'error' }));
+    }
+}
 
 async function executeCommand(command: string, ws: WebSocket) {
     try {

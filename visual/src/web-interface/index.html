@@ -74,13 +74,21 @@
         .log-success { border-left-color: #28a745; }
         .log-error { border-left-color: #dc3545; }
         .log-info { border-left-color: #17a2b8; }
-        #screenshot {
+        #screenshot-container {
+            position: relative;
             width: 100%;
-            height: auto;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+        }
+        #screenshot {
+            max-width: 100%;
+            max-height: 100%;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             object-fit: contain;
-            max-height: 100%;
         }
         .input-area {
             padding: 20px;
@@ -147,8 +155,10 @@
             </div>
             
             <div class="panel">
-                <h2>📸 Visualização em Tempo Real</h2>
-                <img id="screenshot" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='16'%3EAguardando captura...%3C/text%3E%3C/svg%3E" alt="Screenshot">
+                <h2>📸 Visualização em Tempo Real (Clique para Interagir)</h2>
+                <div id="screenshot-container">
+                    <img id="screenshot" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='16'%3EAguardando captura...%3C/text%3E%3C/svg%3E" alt="Screenshot">
+                </div>
             </div>
         </div>
         
@@ -206,6 +216,21 @@
             ws.send(JSON.stringify({ type: 'command', command }));
             commandInput.value = '';
         }
+
+        // Click-to-Control Logic
+        screenshot.addEventListener('click', (e) => {
+            const rect = screenshot.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+
+            addLog(`🖱️ Clique enviado: X=${(x*100).toFixed(1)}% Y=${(y*100).toFixed(1)}%`, 'info');
+            
+            ws.send(JSON.stringify({
+                type: 'click_coordinate',
+                x: x,
+                y: y
+            }));
+        });
 
         sendBtn.addEventListener('click', sendCommand);
         commandInput.addEventListener('keypress', (e) => {
