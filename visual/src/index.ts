@@ -1,6 +1,7 @@
 import { createAgentBrowser, closeAgentBrowser } from './utils/browser';
 import { performLogin } from './actions/login';
 import { runDemo } from './actions/demo';
+import { runInteractiveMode } from './actions/interactive';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,6 +12,12 @@ async function main() {
   // Pega argumentos da linha de comando
   const args = process.argv.slice(2);
   const mode = args[0] || 'login'; // default para login
+
+  // Se for modo interativo, usa o novo módulo dedicado
+  if (mode === 'interactive' || mode === 'interativo') {
+      await runInteractiveMode();
+      return;
+  }
 
   // Configuração headless via .env
   // IMPORTANTE: Para ver o mouse, HEADLESS deve ser false no .env local do usuário
