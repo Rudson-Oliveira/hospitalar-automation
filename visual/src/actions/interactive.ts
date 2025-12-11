@@ -4,6 +4,7 @@ import { captureAndAnalyze, VisionResult } from './vision';
 import { extractData } from './data-extraction';
 import { downloadReport } from './report-automation';
 import { scheduleTask, checkDueTasks } from './scheduler';
+import { autonomousClick, autonomousType, interpretScreen } from './autonomous-control';
 import * as readline from 'readline';
 import { createCursor } from 'ghost-cursor';
 
@@ -117,6 +118,49 @@ export async function runInteractiveMode() {
             return true;
         }
 
+        // COMANDO: CLICAR (AUTÔNOMO)
+        if (cmd.startsWith('clicar ')) {
+            const target = command.substring(7).trim().replace(/^"|"$/g, ''); // Remove aspas
+            const result = await autonomousClick(page, target);
+            if (result.success) {
+                console.log(`✅ Clique realizado em "${target}"`);
+            } else {
+                console.log(`❌ Falha ao clicar: ${result.message}`);
+            }
+            return true;
+        }
+
+        // COMANDO: DIGITAR (AUTÔNOMO)
+        if (cmd.startsWith('digitar ')) {
+            // Formato: digitar "Campo" "Valor"
+            const parts = command.match(/digitar "([^"]+)" "([^"]+)"/);
+            if (parts) {
+                const field = parts[1];
+                const value = parts[2];
+                const result = await autonomousType(page, field, value);
+                if (result.success) {
+                    console.log(`✅ Digitado "${value}" em "${field}"`);
+                } else {
+                    console.log(`❌ Falha ao digitar: ${result.message}`);
+                }
+            } else {
+                console.log('❌ Formato inválido. Use: digitar "Campo" "Valor"');
+            }
+            return true;
+        }
+
+        // COMANDO: ANALISAR (AUTÔNOMO)
+        if (cmd === 'analisar') {
+            console.log('🧠 Analisando contexto da tela...');
+            const analysis = await interpretScreen(page);
+            console.log('📊 Análise da Tela:');
+            console.log(`   - Botões detectados: ${analysis.hasButtons ? 'Sim' : 'Não'}`);
+            console.log(`   - Formulários: ${analysis.hasForms ? 'Sim' : 'Não'}`);
+            console.log(`   - Indicadores de Sucesso: ${analysis.hasSuccess ? 'Sim' : 'Não'}`);
+            console.log(`   - Erros visíveis: ${analysis.hasErrors ? 'Sim' : 'Não'}\n`);
+            return true;
+        }
+
         console.log(`❓ Comando não reconhecido: "${command}"`);
         console.log('Digite "ajuda" para ver comandos disponíveis.\n');
         return true;
@@ -148,6 +192,9 @@ function showHelp() {
     console.log('  extrair [nome]            - Extrai tabelas e dados da tela');
     console.log('  relatorio [nome]          - Baixa relatório com texto específico');
     console.log('  agendar "cmd" HH:mm       - Agenda uma tarefa');
+    console.log('  clicar "Texto"            - Clica em botão/link pelo texto');
+    console.log('  digitar "Campo" "Valor"   - Preenche formulários');
+    console.log('  analisar                  - Interpreta o contexto da tela');
     console.log('  ajuda / help              - Mostra esta ajuda');
     console.log('  sair / exit               - Encerra o programa');
     console.log('─'.repeat(50) + '\n');
