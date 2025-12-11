@@ -1,6 +1,9 @@
 import { chromium, Page, Browser } from 'playwright';
 import { performLogin } from './login';
 import { captureAndAnalyze, VisionResult } from './vision';
+import { extractData } from './data-extraction';
+import { downloadReport } from './report-automation';
+import { scheduleTask, checkDueTasks } from './scheduler';
 import * as readline from 'readline';
 import { createCursor } from 'ghost-cursor';
 
@@ -41,10 +44,20 @@ export async function runInteractiveMode() {
         output: process.stdout
     });
 
+    // Verificador de tarefas agendadas (roda a cada minuto)
+    const schedulerInterval = setInterval(() => {
+        const dueTasks = checkDueTasks();
+        if (dueTasks.length > 0) {
+            console.log(`\n⏰ Executando ${dueTasks.length} tarefas agendadas...`);
+            // Aqui implementaria a execução real das tarefas agendadas
+        }
+    }, 60000);
+
     const processCommand = async (command: string): Promise<boolean> => {
         const cmd = command.trim().toLowerCase();
 
         if (cmd === 'sair' || cmd === 'exit') {
+            clearInterval(schedulerInterval);
             return false;
         }
 
@@ -76,8 +89,31 @@ export async function runInteractiveMode() {
             return true;
         }
 
-        if (cmd === 'relatorio' || cmd.startsWith('baixar relatorio')) {
-            await downloadReport(page);
+        // COMANDO: EXTRAIR DADOS
+        if (cmd.startsWith('extrair')) {
+            const label = cmd.split(' ')[1] || 'manual';
+            await extractData(page, label);
+            return true;
+        }
+
+        // COMANDO: BAIXAR RELATÓRIO
+        if (cmd.startsWith('relatorio ')) {
+            const reportName = command.substring(10).trim(); // Pega o nome original com case
+            await downloadReport(page, reportName);
+            return true;
+        }
+
+        // COMANDO: AGENDAR TAREFA
+        if (cmd.startsWith('agendar ')) {
+            // Formato: agendar "comando" HH:mm
+            const parts = command.match(/agendar "([^"]+)" (\d{2}:\d{2})/);
+            if (parts) {
+                const taskCmd = parts[1];
+                const time = parts[2];
+                scheduleTask(taskCmd, time);
+            } else {
+                console.log('❌ Formato inválido. Use: agendar "comando" HH:mm');
+            }
             return true;
         }
 
@@ -106,39 +142,13 @@ export async function runInteractiveMode() {
 function showHelp() {
     console.log('\n📚 COMANDOS DISPONÍVEIS:');
     console.log('─'.repeat(50));
-    console.log('  ver / screenshot  - Captura tela atual');
-    console.log('  ler / read        - Lê conteúdo da tela');
-    console.log('  navegar [url]     - Vai para uma URL');
-    console.log('  relatorio         - Baixa relatório');
-    console.log('  ajuda / help      - Mostra esta ajuda');
-    console.log('  sair / exit       - Encerra o programa');
+    console.log('  ver / screenshot          - Captura tela atual');
+    console.log('  ler / read                - Lê conteúdo da tela');
+    console.log('  navegar [url]             - Vai para uma URL');
+    console.log('  extrair [nome]            - Extrai tabelas e dados da tela');
+    console.log('  relatorio [nome]          - Baixa relatório com texto específico');
+    console.log('  agendar "cmd" HH:mm       - Agenda uma tarefa');
+    console.log('  ajuda / help              - Mostra esta ajuda');
+    console.log('  sair / exit               - Encerra o programa');
     console.log('─'.repeat(50) + '\n');
-}
-
-async function downloadReport(page: Page): Promise<ActionResult> {
-    console.log('📥 Iniciando download de relatório...');
-    
-    try {
-        // Capturar estado antes
-        const beforeVision = await captureAndAnalyze(page, 'antes_relatorio');
-        
-        // Exemplo: procurar link de relatório
-        // Adapte conforme o sistema real
-        const hasRelatorio = beforeVision.textContent.includes('Relatório') || 
-                            beforeVision.textContent.includes('Relatórios');
-        
-        if (!hasRelatorio) {
-            console.log('⚠️  Não encontrei menu de relatórios na tela atual.');
-            return { success: false, message: 'Relatório não encontrado' };
-        }
-
-        // Aqui você implementaria a lógica específica
-        console.log('✅ Relatório localizado!');
-        console.log('ℹ️  Implementação específica pendente.');
-        
-        return { success: true, message: 'Relatório processado' };
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        return { success: false, message: String(error) };
-    }
 }
