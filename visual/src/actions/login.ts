@@ -49,7 +49,8 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
     
     // Limpar campo antes de digitar (caso tenha algo preenchido)
     await page.fill(userSelector, '');
-    await page.type(userSelector, username, { delay: 100 }); 
+    // Usar fill para garantir que o texto completo seja colado, evitando problemas com caracteres especiais
+    await page.fill(userSelector, username); 
 
     console.log('Aguardando campo de senha...');
     await page.waitForSelector(passSelector, { state: 'visible' });
@@ -68,7 +69,8 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
         await page.click(passSelector);
     }
     await page.fill(passSelector, '');
-    await page.type(passSelector, password, { delay: 100 });
+    // Usar fill para garantir que a senha completa (incluindo ##) seja inserida corretamente
+    await page.fill(passSelector, password);
 
     console.log('Aguardando botão de login...');
     await page.waitForSelector(loginButtonSelector, { state: 'visible' });
