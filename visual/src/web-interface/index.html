@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospitalar Automation - Controle</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: auto;
+        }
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        #log {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #333;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .log-entry {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background: white;
+            border-left: 3px solid #667eea;
+        }
+        .log-success { border-left-color: #28a745; }
+        .log-error { border-left-color: #dc3545; }
+        .log-info { border-left-color: #17a2b8; }
+        #screenshot {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            object-fit: contain;
+            max-height: 100%;
+        }
+        .input-area {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+        #commandInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+        #commandInput:focus { border-color: #764ba2; }
+        #sendBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #sendBtn:hover { transform: scale(1.05); }
+        #sendBtn:active { transform: scale(0.95); }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🤖 Hospitalar Automation</h1>
+                <p>Controle Inteligente de Automação</p>
+            </div>
+            <span class="status offline" id="status">● Offline</span>
+        </div>
+        
+        <div class="content">
+            <div class="panel">
+                <h2>📊 Log de Atividades</h2>
+                <div id="log">
+                    <div class="log-entry log-info">Aguardando conexão com o agente...</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>📸 Visualização em Tempo Real</h2>
+                <img id="screenshot" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='16'%3EAguardando captura...%3C/text%3E%3C/svg%3E" alt="Screenshot">
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="commandInput" placeholder="Digite um comando: ver, ler, clicar 'botão', navegar 'url', relatorio..." autofocus>
+            <button id="sendBtn">Enviar ▶</button>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3002');
+        const log = document.getElementById('log');
+        const commandInput = document.getElementById('commandInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const screenshot = document.getElementById('screenshot');
+        const status = document.getElementById('status');
+
+        ws.onopen = () => {
+            addLog('Conectado ao agente', 'success');
+            status.textContent = '● Online';
+            status.className = 'status online';
+        };
+
+        ws.onclose = () => {
+            addLog('Desconectado do agente', 'error');
+            status.textContent = '● Offline';
+            status.className = 'status offline';
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'log') {
+                addLog(data.message, data.level);
+            }
+            
+            if (data.type === 'screenshot') {
+                screenshot.src = data.image;
+            }
+        };
+
+        function addLog(message, level = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${level}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function sendCommand() {
+            const command = commandInput.value.trim();
+            if (!command) return;
+            
+            addLog(`→ Comando: ${command}`, 'info');
+            ws.send(JSON.stringify({ type: 'command', command }));
+            commandInput.value = '';
+        }
+
+        sendBtn.addEventListener('click', sendCommand);
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+    </script>
+</body>
+</html>
