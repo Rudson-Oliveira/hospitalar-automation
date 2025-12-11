@@ -19,46 +19,52 @@ export async function runDemo(page: Page, cursor: GhostCursor): Promise<void> {
   await page.waitForTimeout(3000);
 
   try {
-    // Tenta identificar elementos de menu comuns para interagir
+    console.log('Procurando elementos interativos para demonstrar o mouse...');
+    
+    // Simplificando a movimentação para evitar erro interno da biblioteca ghost-cursor
+    // Em vez de usar cursor.moveTo (que pode tentar acessar propriedades internas do browser),
+    // vamos usar page.mouse.move para movimentos simples se o cursor falhar,
+    // ou tentar usar o cursor de forma mais segura.
+
+    try {
+        await cursor.moveTo({ x: 100, y: 100 });
+        await page.waitForTimeout(1000);
+        await cursor.moveTo({ x: 500, y: 400 });
+        await page.waitForTimeout(1000);
+    } catch (e) {
+        console.log('Movimento complexo falhou, usando movimento simples...');
+        await page.mouse.move(100, 100);
+        await page.waitForTimeout(1000);
+        await page.mouse.move(500, 400);
+    }
+
     // Seletores genéricos para menus laterais ou superiores
     const menuSelectors = [
       'nav a', 
       '.sidebar a', 
       '.menu-item', 
       'button', 
-      'a[href*="dashboard"]',
-      'a[href*="agenda"]',
-      'a[href*="paciente"]'
+      'a[href*="dashboard"]'
     ];
-
-    console.log('Procurando elementos interativos para demonstrar o mouse...');
-    
-    // Move o mouse aleatoriamente pela tela para mostrar "vida"
-    await cursor.moveTo({ x: 100, y: 100 });
-    await page.waitForTimeout(1000);
-    await cursor.moveTo({ x: 800, y: 600 });
-    await page.waitForTimeout(1000);
 
     // Tenta encontrar elementos visíveis e passar o mouse sobre eles (Hover)
     for (const selector of menuSelectors) {
-      const elements = await page.$$(selector);
+      // Usar locator em vez de $$ para melhor compatibilidade
+      const locator = page.locator(selector).first();
       
-      if (elements.length > 0) {
-        console.log(`Encontrados ${elements.length} elementos para o seletor "${selector}". Interagindo com alguns...`);
+      if (await locator.isVisible()) {
+        console.log(`Interagindo com elemento: ${selector}`);
         
-        // Interage com até 3 elementos de cada tipo
-        for (let i = 0; i < Math.min(elements.length, 3); i++) {
-          const box = await elements[i].boundingBox();
-          if (box) {
-            // Move até o elemento
-            await cursor.move({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
-            
-            // Pausa para "ler" o tooltip ou ver o efeito hover
+        const box = await locator.boundingBox();
+        if (box) {
+            try {
+                // Tenta mover com ghost-cursor
+                await cursor.move({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+            } catch (e) {
+                // Fallback para mouse nativo se der erro
+                await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+            }
             await page.waitForTimeout(1500);
-            
-            // Opcional: Clicar (vamos evitar clicar para não alterar dados por enquanto, apenas hover)
-            // await cursor.click(); 
-          }
         }
       }
     }
