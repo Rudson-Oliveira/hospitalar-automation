@@ -1,4 +1,5 @@
 import { Page } from 'playwright';
+import { captureAndAnalyze } from './vision';
 import { GhostCursor } from 'ghost-cursor';
 import * as dotenv from 'dotenv';
 
@@ -110,16 +111,26 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
         console.log('Timeout aguardando mudança de estado. Verificando URL atual...');
     }
     
-    await page.screenshot({ path: 'results/login_attempt_v3.png' });
+    // Substituindo screenshot simples pela nova Visão Computacional
+    console.log('Analisando o estado final da tela...');
+    const visionResult = await captureAndAnalyze(page, 'pos_login');
     
     const currentUrl = page.url();
     console.log(`URL Final: ${currentUrl}`);
 
-    if (currentUrl.includes('dashboard') || currentUrl.includes('home') || (currentUrl !== url && !currentUrl.includes('login'))) {
-        console.log('Login realizado com sucesso!');
+    // Critérios de Sucesso expandidos: URL OU Texto na tela
+    const successKeywords = ['Bem-vindo', 'Dashboard', 'Painel', 'Sucesso', 'Sair', 'Logout'];
+    const hasSuccessText = successKeywords.some(keyword => visionResult.textContent.includes(keyword));
+
+    if (currentUrl.includes('dashboard') || currentUrl.includes('home') || hasSuccessText) {
+        console.log('✅ Login realizado com sucesso! (Confirmado por URL ou Leitura de Tela)');
+        console.log('--- CONTEÚDO LIDO NA TELA ---');
+        console.log(visionResult.textContent.substring(0, 500) + '...'); // Mostra os primeiros 500 chars
+        console.log('-----------------------------');
         return true;
     } else {
-        console.log('Não foi possível confirmar o login pela URL. Verifique o screenshot.');
+        console.warn('⚠️ Não foi possível confirmar o login automaticamente.');
+        console.log('Verifique a imagem salva em: ' + visionResult.screenshotPath);
         return false;
     }
 
