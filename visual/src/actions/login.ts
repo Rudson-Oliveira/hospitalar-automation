@@ -22,19 +22,16 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
   }
 
   try {
-    // Seletores mais específicos baseados no screenshot
-    // O botão "ENTRAR" parece ser um botão padrão, vamos tentar pegar pelo texto exato
-    const userSelector = 'input[type="email"]'; // Parece ser type email
+    const userSelector = 'input[type="email"]';
     const passSelector = 'input[type="password"]';
-    const loginButtonSelector = 'button:has-text("ENTRAR")'; // Texto em maiúsculo conforme screenshot
+    const loginButtonSelector = 'button:has-text("ENTRAR")';
 
     console.log('Aguardando campo de usuário...');
     await page.waitForSelector(userSelector, { state: 'visible', timeout: 20000 });
 
-    // Movimento humanizado e preenchimento
+    // Preenchendo usuário
     console.log('Preenchendo usuário...');
     try {
-        // Tentar clicar no centro do elemento para evitar problemas de borda
         const userBox = await page.locator(userSelector).boundingBox();
         if (userBox) {
             await cursor.move({ x: userBox.x + userBox.width / 2, y: userBox.y + userBox.height / 2 });
@@ -47,15 +44,20 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
         await page.click(userSelector);
     }
     
-    // Limpar campo antes de digitar (caso tenha algo preenchido)
-    await page.fill(userSelector, '');
-    // Usar fill para garantir que o texto completo seja colado, evitando problemas com caracteres especiais
-    await page.fill(userSelector, username); 
+    // Método infalível: Injeção direta via JS + Disparo de eventos
+    await page.evaluate(({ selector, value }) => {
+        const input = document.querySelector(selector) as HTMLInputElement;
+        if (input) {
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }, { selector: userSelector, value: username });
 
     console.log('Aguardando campo de senha...');
     await page.waitForSelector(passSelector, { state: 'visible' });
     
-    console.log('Preenchendo senha...');
+    console.log('Preenchendo senha (Modo Injeção Direta)...');
     try {
         const passBox = await page.locator(passSelector).boundingBox();
         if (passBox) {
@@ -68,9 +70,16 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
         console.warn('Ghost cursor falhou no clique da senha, usando clique nativo');
         await page.click(passSelector);
     }
-    await page.fill(passSelector, '');
-    // Usar fill para garantir que a senha completa (incluindo ##) seja inserida corretamente
-    await page.fill(passSelector, password);
+    
+    // Método infalível para senha também
+    await page.evaluate(({ selector, value }) => {
+        const input = document.querySelector(selector) as HTMLInputElement;
+        if (input) {
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }, { selector: passSelector, value: password });
 
     console.log('Aguardando botão de login...');
     await page.waitForSelector(loginButtonSelector, { state: 'visible' });
@@ -91,25 +100,21 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
 
     // Aguardar navegação
     console.log('Aguardando redirecionamento...');
-    
-    // Esperar por qualquer mudança na URL ou aparecimento de elemento do dashboard
     try {
         await Promise.race([
             page.waitForURL((url) => !url.toString().includes('login') && !url.toString().endsWith('/#/'), { timeout: 20000 }),
-            page.waitForSelector('.dashboard-container, .sidebar, .menu, header', { timeout: 20000 }) // Seletores genéricos de dashboard
+            page.waitForSelector('.dashboard-container, .sidebar, .menu, header', { timeout: 20000 })
         ]);
         console.log('Navegação detectada ou elemento de dashboard encontrado.');
     } catch (e) {
         console.log('Timeout aguardando mudança de estado. Verificando URL atual...');
     }
     
-    // Tira screenshot final para verificação
-    await page.screenshot({ path: 'results/login_attempt_v2.png' });
+    await page.screenshot({ path: 'results/login_attempt_v3.png' });
     
     const currentUrl = page.url();
     console.log(`URL Final: ${currentUrl}`);
 
-    // Verifica se saiu da raiz ou login
     if (currentUrl.includes('dashboard') || currentUrl.includes('home') || (currentUrl !== url && !currentUrl.includes('login'))) {
         console.log('Login realizado com sucesso!');
         return true;
@@ -120,7 +125,7 @@ export async function performLogin(page: Page, cursor: GhostCursor): Promise<boo
 
   } catch (error) {
     console.error('Falha no login:', error);
-    await page.screenshot({ path: 'results/login_error_v2.png' });
+    await page.screenshot({ path: 'results/login_error_v3.png' });
     return false;
   }
 }
