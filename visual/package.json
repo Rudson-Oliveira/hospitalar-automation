@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/index.ts",
-    "interact": "ts-node src/interactive.ts"
+    "interact": "ts-node src/interactive.ts",
+    "dev:interactive": "ts-node src/interactive.ts"
   },
   "keywords": [],
   "author": "",
