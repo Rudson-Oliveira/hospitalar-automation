@@ -126,6 +126,15 @@ app.post('/api/update', (req, res) => {
   });
 });
 
+// Health Check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Rota principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(staticPath, 'dashboard.html'));

@@ -94,8 +94,8 @@ export class AutonomousAgent {
             if (!this.page || !this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
             try {
-                // Capturar Screenshot
-                const screenshotBuffer = await this.page.screenshot();
+                // Capturar Screenshot com timeout para evitar travamento
+                const screenshotBuffer = await this.page.screenshot({ timeout: 5000 });
                 const screenshotBase64 = screenshotBuffer.toString('base64');
                 
                 // Enviar para o Dashboard
@@ -111,7 +111,7 @@ export class AutonomousAgent {
             } catch (error) {
                 console.error('[AGENT] Erro ao capturar screenshot:', error);
             }
-        }, 2000); // A cada 2 segundos
+        }, 5000); // A cada 5 segundos (reduz carga de CPU)
     }
 
     public async stop() {
