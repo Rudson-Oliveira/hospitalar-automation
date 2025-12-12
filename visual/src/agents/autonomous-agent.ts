@@ -1,6 +1,6 @@
 import { chromium, Browser, Page } from 'playwright';
 import WebSocket from 'ws';
-import { MultiOnClient } from '../services/multion-client';
+import { BrowserbaseClient } from '../services/browserbase-client';
 
 export class AutonomousAgent {
     private browser: Browser | null = null;
@@ -8,25 +8,28 @@ export class AutonomousAgent {
     private ws: WebSocket | null = null;
     private isRunning: boolean = false;
     private dashboardUrl: string;
-    private multiOn: MultiOnClient | null = null;
-    private mode: 'LOCAL' | 'MULTION' = 'LOCAL';
+    private browserbase: BrowserbaseClient | null = null;
+    private mode: 'LOCAL' | 'CLOUD' = 'LOCAL'; // CLOUD = Browserbase
 
     constructor(dashboardUrl: string = 'ws://localhost:3002') {
         this.dashboardUrl = dashboardUrl;
         
-        // Inicializar MultiOn se chave existir, mas modo padrão pode ser controlado externamente
-        if (process.env.MULTION_API_KEY) {
-            this.multiOn = new MultiOnClient(process.env.MULTION_API_KEY);
+        // Inicializar Browserbase se chaves existirem
+        if (process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID) {
+            this.browserbase = new BrowserbaseClient(
+                process.env.BROWSERBASE_API_KEY,
+                process.env.BROWSERBASE_PROJECT_ID
+            );
         }
         
         // Definir modo inicial
-        this.mode = process.env.DEFAULT_AGENT_MODE === 'MULTION' && this.multiOn ? 'MULTION' : 'LOCAL';
+        this.mode = process.env.DEFAULT_AGENT_MODE === 'CLOUD' && this.browserbase ? 'CLOUD' : 'LOCAL';
         console.log(`[AGENT] Inicializado em modo: ${this.mode}`);
     }
 
-    public setMode(newMode: 'LOCAL' | 'MULTION') {
-        if (newMode === 'MULTION' && !this.multiOn) {
-            console.warn('[AGENT] Tentativa de ativar MultiOn sem API Key configurada. Mantendo LOCAL.');
+    public setMode(newMode: 'LOCAL' | 'CLOUD') {
+        if (newMode === 'CLOUD' && !this.browserbase) {
+            console.warn('[AGENT] Tentativa de ativar Cloud (Browserbase) sem credenciais. Mantendo LOCAL.');
             return false;
         }
         this.mode = newMode;
@@ -48,28 +51,37 @@ export class AutonomousAgent {
             // Conectar ao Dashboard via WebSocket
             this.connectToDashboard();
 
-            if (this.mode === 'MULTION') {
-                console.log('[AGENT] Iniciando sessão remota via MultiOn...');
-                // Lógica do MultiOn será chamada no loop de monitoramento
-                // Não precisamos iniciar o Chromium local se estivermos usando MultiOn puro
-                // Mas mantemos o Chromium local como BACKUP se o MultiOn falhar
+            if (this.mode === 'CLOUD' && this.browserbase) {
+                console.log('[AGENT] Iniciando sessão remota via Browserbase...');
+                try {
+                    const session = await this.browserbase.createSession();
+                    // Conectar ao navegador remoto via CDP (WebSocket)
+                    this.browser = await chromium.connectOverCDP(session.connectUrl);
+                    console.log('[AGENT] Conectado ao Browserbase com sucesso!');
+                } catch (e) {
+                    console.error('[AGENT] Falha ao conectar no Browserbase:', e);
+                    console.log('[AGENT] Caindo para modo LOCAL (Fallback)...');
+                    this.mode = 'LOCAL';
+                }
             }
 
-            // Iniciar Navegador Local (Backup ou Principal)
-            console.log('[AGENT] Iniciando Chromium Local (Railway)...');
-            this.browser = await chromium.launch({ 
-                headless: true,
-                timeout: 60000, 
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--single-process',
-                    '--no-zygote'
-                ]
-            });
-            console.log('[AGENT] Chromium iniciado com sucesso!');
+            if (this.mode === 'LOCAL') {
+                // Iniciar Navegador Local (Railway)
+                console.log('[AGENT] Iniciando Chromium Local (Railway)...');
+                this.browser = await chromium.launch({ 
+                    headless: true,
+                    timeout: 60000, 
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--single-process',
+                        '--no-zygote'
+                    ]
+                });
+                console.log('[AGENT] Chromium Local iniciado com sucesso!');
+            }
             
             this.page = await this.browser.newPage();
             await this.page.setViewportSize({ width: 1280, height: 720 });
@@ -136,23 +148,9 @@ export class AutonomousAgent {
 
             try {
                 let screenshotBase64 = '';
-                let source = 'Railway (Local)';
+                let source = this.mode === 'CLOUD' ? 'Browserbase (Cloud)' : 'Railway (Local)';
 
-                if (this.mode === 'MULTION' && this.multiOn) {
-                    try {
-                        // Tentar obter screenshot do MultiOn
-                        // const result = await this.multiOn.browse(...)
-                        // Por enquanto, simulamos para não gastar créditos sem necessidade
-                        // Se falhar, cai no catch e usa o local
-                        source = 'MultiOn (Cloud)';
-                    } catch (e) {
-                        console.error('[AGENT] Falha no MultiOn, usando fallback local:', e);
-                        source = 'Railway (Fallback)';
-                    }
-                }
-
-                // Se não pegou do MultiOn ou se é modo local, usa Playwright
-                if (!screenshotBase64 && this.page) {
+                if (this.page) {
                     const screenshotBuffer = await this.page.screenshot({ timeout: 5000 });
                     screenshotBase64 = screenshotBuffer.toString('base64');
                 }

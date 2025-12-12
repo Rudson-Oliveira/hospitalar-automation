@@ -46,20 +46,20 @@ export class SelfHealingOrchestrator {
         console.error(`[SELF-HEALING] 🚨 LIMITE DE FALHAS ATINGIDO NO MODO ${currentMode}! INICIANDO PROTOCOLO DE RECUPERAÇÃO.`);
 
         if (currentMode === 'LOCAL') {
-            // Failover: Tentar mudar para MultiOn (Nuvem)
-            console.log('[SELF-HEALING] 🔄 Tentando migrar para MultiOn (Cloud)...');
-            const success = this.agent.setMode('MULTION');
+            // Failover: Tentar mudar para Browserbase (Nuvem)
+            console.log('[SELF-HEALING] 🔄 Tentando migrar para Browserbase (Cloud)...');
+            const success = this.agent.setMode('CLOUD');
             
             if (success) {
-                console.log('[SELF-HEALING] ✅ Migração para MultiOn concluída com sucesso.');
+                console.log('[SELF-HEALING] ✅ Migração para Browserbase concluída com sucesso.');
                 this.failureCount = 0;
             } else {
-                console.error('[SELF-HEALING] ❌ Falha na migração (Sem chave API?). Tentando reiniciar agente local.');
+                console.error('[SELF-HEALING] ❌ Falha na migração (Sem credenciais?). Tentando reiniciar agente local.');
                 await this.restartAgent();
             }
         } else {
-            // Failback: Se MultiOn falhar, voltar para Local
-            console.log('[SELF-HEALING] 🔄 MultiOn instável. Voltando para Railway (Local)...');
+            // Failback: Se Browserbase falhar, voltar para Local
+            console.log('[SELF-HEALING] 🔄 Browserbase instável. Voltando para Railway (Local)...');
             this.agent.setMode('LOCAL');
             await this.restartAgent();
             this.failureCount = 0;

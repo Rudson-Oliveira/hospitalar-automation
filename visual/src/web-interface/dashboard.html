@@ -116,9 +116,9 @@
                             sourceBadge.textContent = payload.source.toUpperCase();
                             sourceBadge.classList.remove('hidden');
                             
-                            // Cor diferente para MultiOn vs Railway
-                            if (payload.source.includes('MultiOn')) {
-                                sourceBadge.className = 'bg-purple-600 text-white text-xs px-2 py-1 rounded';
+                            // Cor diferente para Browserbase vs Railway
+                            if (payload.source.includes('Browserbase') || payload.source.includes('Cloud')) {
+                                sourceBadge.className = 'bg-orange-600 text-white text-xs px-2 py-1 rounded';
                             } else {
                                 sourceBadge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded';
                             }
