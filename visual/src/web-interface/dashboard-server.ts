@@ -60,6 +60,11 @@ wss.on('connection', (ws) => {
       
       // Se for screenshot ou log do agente, fazer broadcast para todos os clientes (Dashboards)
       if (data.type === 'screenshot' || data.type === 'log' || data.type === 'AGENT_CONNECT') {
+        // Log de debug para confirmar recebimento (apenas para logs e connect, screenshot polui muito)
+        if (data.type !== 'screenshot') {
+            console.log(`[BROADCAST] Recebido do Agente: ${data.type} - Retransmitindo...`);
+        }
+        
         wss.clients.forEach((client) => {
           if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(message.toString());
@@ -69,10 +74,13 @@ wss.on('connection', (ws) => {
       
       // Se for comando do Dashboard, enviar para o Agente (implementação simplificada de broadcast reverso)
       if (data.type === 'command' || data.type === 'click_coordinate') {
-         // Aqui idealmente identificaríamos qual socket é o agente, mas broadcast funciona se o agente filtrar
-         // O agente não escuta broadcast por padrão, mas vamos garantir que ele receba se estiver conectado
-         // TODO: Implementar identificação de clientes (Agente vs Dashboard) para roteamento direto
-         console.log(`Comando recebido: ${data.type}`);
+         console.log(`[COMMAND] Recebido do Dashboard: ${data.type} - Retransmitindo para Agente...`);
+         // Broadcast para garantir que o agente receba
+         wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(message.toString());
+            }
+          });
       }
 
     } catch (e) {
