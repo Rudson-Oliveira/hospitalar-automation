@@ -117,5 +117,22 @@
 
     </div>
 
+    <!-- Integração do Assistente Virtual -->
+    <div id="assistant-container"></div>
+    <script>
+        fetch('/virtual-assistant.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('assistant-container').innerHTML = html;
+                // Re-executar scripts do HTML injetado
+                const scripts = document.getElementById('assistant-container').querySelectorAll("script");
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement("script");
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+            });
+    </script>
 </body>
 </html>

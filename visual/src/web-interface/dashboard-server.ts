@@ -121,6 +121,14 @@ app.get('/settings', (req, res) => {
   res.sendFile(path.join(__dirname, 'settings.html'));
 });
 
+app.get('/virtual-assistant.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'virtual-assistant.html'));
+});
+
+app.get('/onboarding', (req, res) => {
+  res.sendFile(path.join(__dirname, 'onboarding-wizard.html'));
+});
+
 server.listen(PORT, () => {
   console.log(`🚀 Dashboard Server rodando em http://localhost:${PORT}`);
   console.log(`   - CEO Dashboard: http://localhost:${PORT}/`);

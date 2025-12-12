@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo à Hospitalar - Onboarding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .step-content { display: none; }
+        .step-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans flex items-center justify-center h-screen">
+
+    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+        
+        <!-- Progress Bar -->
+        <div class="bg-gray-700 h-2 w-full">
+            <div id="progress-bar" class="bg-blue-500 h-2 w-0 transition-all duration-500"></div>
+        </div>
+
+        <div class="p-8">
+            
+            <!-- Step 1: Welcome -->
+            <div id="step-1" class="step-content active text-center">
+                <div class="mb-6">
+                    <i class="fas fa-heartbeat text-6xl text-blue-500 animate-pulse"></i>
+                </div>
+                <h1 class="text-3xl font-bold mb-4">Bem-vindo à Família Hospitalar!</h1>
+                <p class="text-xl text-gray-300 mb-8">Estamos muito felizes em ter você aqui. Este sistema será seu parceiro no dia a dia.</p>
+                
+                <div class="bg-blue-900/30 p-6 rounded-lg border border-blue-500/30 mb-8 text-left">
+                    <h3 class="font-bold text-blue-300 mb-2"><i class="fas fa-info-circle mr-2"></i>Como funciona este treinamento?</h3>
+                    <p class="text-gray-400">Não se preocupe se você não entende muito de computadores. Vamos te guiar passo a passo, como se estivéssemos aí do seu lado.</p>
+                </div>
+
+                <button onclick="nextStep(2)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition transform hover:scale-105 shadow-lg">
+                    Vamos Começar! <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: Culture Video -->
+            <div id="step-2" class="step-content text-center">
+                <h2 class="text-2xl font-bold mb-6">Nossa Missão e Valores</h2>
+                
+                <!-- Placeholder Video -->
+                <div class="aspect-w-16 aspect-h-9 bg-black rounded-lg mb-6 flex items-center justify-center h-64 border border-gray-600">
+                    <div class="text-center">
+                        <i class="fas fa-play-circle text-5xl text-gray-500 mb-2"></i>
+                        <p class="text-gray-400">Vídeo Institucional (Simulado)</p>
+                    </div>
+                </div>
+
+                <p class="text-gray-300 mb-8">Na Hospitalar, nosso foco é cuidar de vidas. Cada clique neste sistema ajuda um paciente a receber atendimento mais rápido.</p>
+
+                <div class="flex justify-between">
+                    <button onclick="prevStep(1)" class="text-gray-400 hover:text-white">Voltar</button>
+                    <button onclick="nextStep(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition">
+                        Entendi, Próximo <i class="fas fa-check ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Level Detection (Quiz) -->
+            <div id="step-3" class="step-content">
+                <h2 class="text-2xl font-bold mb-6 text-center">Vamos personalizar sua experiência</h2>
+                <p class="text-gray-300 text-center mb-8">Responda sinceramente para ajustarmos o sistema ao seu jeito.</p>
+
+                <div class="space-y-4">
+                    <button onclick="setLevel('BEGINNER_TOTAL')" class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg flex items-center transition border border-transparent hover:border-blue-500 group">
+                        <div class="bg-blue-500/20 p-3 rounded-full mr-4 group-hover:bg-blue-500 text-blue-300 group-hover:text-white transition">
+                            <i class="fas fa-mouse"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-white">Não tenho muita experiência com computadores</h3>
+                            <p class="text-sm text-gray-400">Prefiro explicações bem detalhadas e passo a passo.</p>
+                        </div>
+                    </button>
+
+                    <button onclick="setLevel('INTERMEDIATE')" class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg flex items-center transition border border-transparent hover:border-blue-500 group">
+                        <div class="bg-green-500/20 p-3 rounded-full mr-4 group-hover:bg-green-500 text-green-300 group-hover:text-white transition">
+                            <i class="fas fa-laptop"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-white">Uso computador no dia a dia</h3>
+                            <p class="text-sm text-gray-400">Conheço o básico, mas gosto de dicas.</p>
+                        </div>
+                    </button>
+
+                    <button onclick="setLevel('EXPERT')" class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg flex items-center transition border border-transparent hover:border-blue-500 group">
+                        <div class="bg-purple-500/20 p-3 rounded-full mr-4 group-hover:bg-purple-500 text-purple-300 group-hover:text-white transition">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-white">Sou expert / TI</h3>
+                            <p class="text-sm text-gray-400">Quero atalhos e eficiência máxima.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Completion -->
+            <div id="step-4" class="step-content text-center">
+                <div class="mb-6">
+                    <i class="fas fa-check-circle text-6xl text-green-500 animate-bounce"></i>
+                </div>
+                <h1 class="text-3xl font-bold mb-4">Tudo Pronto!</h1>
+                <p class="text-xl text-gray-300 mb-8">Configuramos o sistema especialmente para você.</p>
+                
+                <div id="custom-message" class="bg-gray-700 p-4 rounded mb-8 text-gray-300 italic">
+                    <!-- Mensagem dinâmica baseada no nível -->
+                </div>
+
+                <a href="/" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg transition transform hover:scale-105 shadow-lg inline-block">
+                    Ir para o Dashboard <i class="fas fa-rocket ml-2"></i>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function updateProgress() {
+            const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            currentStep = step;
+            updateProgress();
+        }
+
+        function nextStep(step) {
+            showStep(step);
+        }
+
+        function prevStep(step) {
+            showStep(step);
+        }
+
+        function setLevel(level) {
+            localStorage.setItem('USER_LEVEL', level);
+            
+            const msgEl = document.getElementById('custom-message');
+            if (level === 'BEGINNER_TOTAL') {
+                msgEl.innerText = "Modo ativado: 'Professor Paciente'. Vamos te explicar cada detalhe com calma!";
+            } else if (level === 'INTERMEDIATE') {
+                msgEl.innerText = "Modo ativado: 'Assistente Prático'. Dicas úteis quando você precisar.";
+            } else {
+                msgEl.innerText = "Modo ativado: 'Turbo'. Interface limpa para alta performance.";
+            }
+
+            nextStep(4);
+        }
+    </script>
+</body>
+</html>

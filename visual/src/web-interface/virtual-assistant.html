@@ -1,0 +1,74 @@
+<!-- Virtual Assistant Component -->
+<div id="virtual-assistant" class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    
+    <!-- Chat Bubble (Hidden by default) -->
+    <div id="va-chat" class="hidden bg-white text-gray-800 rounded-2xl shadow-2xl w-80 mb-4 overflow-hidden border border-gray-200 transition-all transform origin-bottom-right">
+        <div class="bg-blue-600 p-4 text-white flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-white/20 p-2 rounded-full">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm">Mentor Virtual</h3>
+                    <p class="text-xs text-blue-100">Estou aqui para ajudar!</p>
+                </div>
+            </div>
+            <button onclick="toggleAssistant()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="p-4 h-64 overflow-y-auto bg-gray-50" id="va-messages">
+            <!-- Mensagem de Boas Vindas -->
+            <div class="flex gap-2 mb-4">
+                <div class="bg-blue-100 p-3 rounded-lg rounded-tl-none text-sm text-gray-700 shadow-sm">
+                    Olá! 👋 Percebi que você está na tela de <strong>Dashboard</strong>. Quer que eu te explique o que significam esses gráficos?
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 bg-white border-t border-gray-200 flex gap-2">
+            <input type="text" placeholder="Digite sua dúvida..." class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700 transition">
+                <i class="fas fa-paper-plane text-xs"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Button (SOS) -->
+    <div class="flex items-center gap-3">
+        <div id="va-tooltip" class="bg-white text-gray-800 px-4 py-2 rounded-lg shadow-lg text-sm font-bold animate-bounce mr-2 hidden">
+            Preciso de ajuda? Clique aqui! 👈
+        </div>
+        <button onclick="toggleAssistant()" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-2xl transition transform hover:scale-110 ring-4 ring-white/30">
+            <i class="fas fa-life-ring"></i>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    function toggleAssistant() {
+        const chat = document.getElementById('va-chat');
+        const tooltip = document.getElementById('va-tooltip');
+        
+        if (chat.classList.contains('hidden')) {
+            chat.classList.remove('hidden');
+            tooltip.classList.add('hidden');
+        } else {
+            chat.classList.add('hidden');
+        }
+    }
+
+    // Mostrar tooltip de ajuda após 10 segundos de inatividade
+    let idleTimer;
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        document.getElementById('va-tooltip').classList.add('hidden');
+        idleTimer = setTimeout(() => {
+            document.getElementById('va-tooltip').classList.remove('hidden');
+        }, 10000); // 10 segundos
+    }
+
+    document.addEventListener('mousemove', resetIdleTimer);
+    document.addEventListener('keypress', resetIdleTimer);
+    resetIdleTimer(); // Iniciar
+</script>
