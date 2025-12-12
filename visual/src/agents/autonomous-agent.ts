@@ -14,14 +14,28 @@ export class AutonomousAgent {
     constructor(dashboardUrl: string = 'ws://localhost:3002') {
         this.dashboardUrl = dashboardUrl;
         
-        // Verificar se tem chave do MultiOn configurada
+        // Inicializar MultiOn se chave existir, mas modo padrão pode ser controlado externamente
         if (process.env.MULTION_API_KEY) {
             this.multiOn = new MultiOnClient(process.env.MULTION_API_KEY);
-            this.mode = 'MULTION';
-            console.log('[AGENT] Modo Híbrido Ativado: MultiOn (Principal) + Railway (Backup)');
-        } else {
-            console.log('[AGENT] Modo Local: Railway (Playwright)');
         }
+        
+        // Definir modo inicial
+        this.mode = process.env.DEFAULT_AGENT_MODE === 'MULTION' && this.multiOn ? 'MULTION' : 'LOCAL';
+        console.log(`[AGENT] Inicializado em modo: ${this.mode}`);
+    }
+
+    public setMode(newMode: 'LOCAL' | 'MULTION') {
+        if (newMode === 'MULTION' && !this.multiOn) {
+            console.warn('[AGENT] Tentativa de ativar MultiOn sem API Key configurada. Mantendo LOCAL.');
+            return false;
+        }
+        this.mode = newMode;
+        console.log(`[AGENT] Modo alterado dinamicamente para: ${this.mode}`);
+        return true;
+    }
+
+    public getMode() {
+        return this.mode;
     }
 
     public async start() {

@@ -9,6 +9,7 @@ import { BoardOrchestrator } from '../agents/orchestrator';
 import { authMiddleware, requireAdmin } from '../middleware/auth';
 import { AGENTS } from '../agents/personas';
 import { AutonomousAgent } from '../agents/autonomous-agent';
+import { SelfHealingOrchestrator } from '../services/self-healing';
 
 const app = express();
 const server = http.createServer(app);
@@ -24,11 +25,22 @@ app.use(express.static(staticPath));
 // Instância do Board
 const board = new BoardOrchestrator();
 
-// Iniciar Agente Autônomo (Navegador)
+// Iniciar Agente Autônomo e Self-Healing
 // Aguarda um pouco para garantir que o servidor WS esteja de pé
 setTimeout(() => {
   const autonomousAgent = new AutonomousAgent(`ws://localhost:${PORT}`);
-  autonomousAgent.start().catch(console.error);
+  const healer = new SelfHealingOrchestrator(autonomousAgent);
+  
+  // Iniciar monitoramento
+  healer.startMonitoring();
+  autonomousAgent.start().catch(err => {
+    console.error(err);
+    healer.reportFailure(err);
+  });
+
+  // Expor para debug/controle manual se necessário
+  (global as any).agent = autonomousAgent;
+  (global as any).healer = healer;
 }, 5000);
 
 // WebSocket Connection
