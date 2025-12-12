@@ -23,16 +23,20 @@ export class AutonomousAgent {
             this.connectToDashboard();
 
             // Iniciar Navegador com flags otimizadas para Docker/Railway
+            console.log('[AGENT] Iniciando Chromium...');
             this.browser = await chromium.launch({ 
                 headless: true,
+                timeout: 60000, // Aumentar timeout para 60s (containers lentos)
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage', // CRÍTICO: Usa /tmp em vez de /dev/shm (evita crash por falta de memória)
-                    '--disable-gpu',           // Recomendado para ambientes headless
-                    '--single-process'         // Opcional: reduz overhead de processos
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--single-process',
+                    '--no-zygote' // Reduz uso de memória extra
                 ]
             });
+            console.log('[AGENT] Chromium iniciado com sucesso!');
             
             this.page = await this.browser.newPage();
             await this.page.setViewportSize({ width: 1280, height: 720 });
@@ -42,10 +46,14 @@ export class AutonomousAgent {
             console.log(`[AGENT] Navegando para: ${targetUrl}`);
             
             try {
-                await this.page.goto(targetUrl, { timeout: 60000 });
+                console.log(`[AGENT] Navegando para: ${targetUrl}`);
+                await this.page.goto(targetUrl, { 
+                    timeout: 60000, 
+                    waitUntil: 'domcontentloaded' // Não esperar carregar tudo (imagens, analytics, etc)
+                });
+                console.log('[AGENT] Página carregada!');
             } catch (e) {
-                console.error(`[AGENT] Erro ao carregar página: ${e}`);
-                // Continua mesmo com erro para tentar screenshot
+                console.error(`[AGENT] Erro ao carregar página (continuando): ${e}`);
             }
 
             // Loop de monitoramento e screenshots
