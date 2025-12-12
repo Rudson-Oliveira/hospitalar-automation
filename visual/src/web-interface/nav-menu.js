@@ -1,7 +1,4 @@
 (function() {
-    console.log("🚀 NAV MENU: Iniciando carregamento...");
-    alert("🚀 NAV MENU: Script carregado! Se você vê isso, o script funcionou.");
-    
     // Estilos CSS para o menu
     const style = document.createElement('style');
     style.textContent = `
@@ -11,10 +8,7 @@
             right: 1rem;
             display: flex;
             gap: 0.5rem;
-            z-index: 2147483647; /* Max Z-Index */
-            border: 2px solid red; /* DEBUG VISUAL */
-            background: rgba(255, 0, 0, 0.2); /* DEBUG VISUAL */
-            padding: 5px;
+            z-index: 9999;
             font-family: sans-serif;
         }
         .nav-btn {
