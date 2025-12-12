@@ -17,7 +17,13 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3002;
 
 // Servir arquivos estáticos (HTML do Dashboard)
-app.use(express.static(path.join(__dirname, '.')));
+// Em produção (dist/), os arquivos HTML não são copiados automaticamente pelo tsc
+// Precisamos servir a pasta 'src/web-interface' original ou copiar os arquivos no build
+const staticPath = process.env.NODE_ENV === 'production' 
+  ? path.join(__dirname, '../../src/web-interface') 
+  : path.join(__dirname, '.');
+
+app.use(express.static(staticPath));
 
 // Instância do Board
 const board = new BoardOrchestrator();
@@ -126,31 +132,31 @@ app.post('/api/update', (req, res) => {
 
 // Rota principal
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
+  res.sendFile(path.join(staticPath, 'dashboard.html'));
 });
 
 app.get('/copilot', (req, res) => {
-  res.sendFile(path.join(__dirname, 'copilot-sidebar.html'));
+  res.sendFile(path.join(staticPath, 'copilot-sidebar.html'));
 });
 
 app.get('/autonomy', (req, res) => {
-  res.sendFile(path.join(__dirname, 'autonomy-dashboard.html'));
+  res.sendFile(path.join(staticPath, 'autonomy-dashboard.html'));
 });
 
 app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'settings.html'));
+  res.sendFile(path.join(staticPath, 'settings.html'));
 });
 
 app.get('/virtual-assistant.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'virtual-assistant.html'));
+  res.sendFile(path.join(staticPath, 'virtual-assistant.html'));
 });
 
 app.get('/onboarding', (req, res) => {
-  res.sendFile(path.join(__dirname, 'onboarding-wizard.html'));
+  res.sendFile(path.join(staticPath, 'onboarding-wizard.html'));
 });
 
 app.get('/nav-menu.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'nav-menu.js'));
+  res.sendFile(path.join(staticPath, 'nav-menu.js'));
 });
 
 server.listen(PORT, () => {
