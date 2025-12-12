@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import path from 'path';
 import fs from 'fs';
 import { exec } from 'child_process';
@@ -53,9 +53,36 @@ wss.on('connection', (ws) => {
     data: board.getHistory()
   }));
 
-  // Simulação de eventos em tempo real para demonstração
+  // Lidar com mensagens recebidas (Broadcast)
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      
+      // Se for screenshot ou log do agente, fazer broadcast para todos os clientes (Dashboards)
+      if (data.type === 'screenshot' || data.type === 'log' || data.type === 'AGENT_CONNECT') {
+        wss.clients.forEach((client) => {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(message.toString());
+          }
+        });
+      }
+      
+      // Se for comando do Dashboard, enviar para o Agente (implementação simplificada de broadcast reverso)
+      if (data.type === 'command' || data.type === 'click_coordinate') {
+         // Aqui idealmente identificaríamos qual socket é o agente, mas broadcast funciona se o agente filtrar
+         // O agente não escuta broadcast por padrão, mas vamos garantir que ele receba se estiver conectado
+         // TODO: Implementar identificação de clientes (Agente vs Dashboard) para roteamento direto
+         console.log(`Comando recebido: ${data.type}`);
+      }
+
+    } catch (e) {
+      console.error('Erro ao processar mensagem WS:', e);
+    }
+  });
+
+  // Simulação de eventos em tempo real para demonstração (MANTIDO, mas reduzido frequência)
   const interval = setInterval(async () => {
-    if (Math.random() > 0.7) {
+    if (Math.random() > 0.9) { // Reduzido para não poluir tanto
       const agents = Object.values(AGENTS);
       const randomAgent = agents[Math.floor(Math.random() * agents.length)];
       const messages = [
@@ -66,9 +93,6 @@ wss.on('connection', (ws) => {
         "Nenhuma anomalia detectada."
       ];
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-      
-      // Adicionar ao board (apenas log, sem iniciar reunião completa para não poluir)
-      // Em produção, isso viria do evento real
       
       const msgObj = {
         from: randomAgent.name,
@@ -81,7 +105,7 @@ wss.on('connection', (ws) => {
         data: msgObj
       }));
     }
-  }, 5000);
+  }, 10000);
 
   ws.on('close', () => {
     clearInterval(interval);
