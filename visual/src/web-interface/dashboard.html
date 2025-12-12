@@ -21,6 +21,7 @@
         </div>
         <div class="flex gap-4">
             <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">● Sistema Online</span>
+            <button onclick="triggerChaos()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-1 rounded text-sm font-bold" title="Testar Failover Automático">💥 SIMULAR CRASH</button>
             <button class="bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm font-bold">PARADA DE EMERGÊNCIA</button>
         </div>
     </header>
@@ -136,6 +137,15 @@
                     `;
                     chatLog.appendChild(div);
                     chatLog.scrollTop = chatLog.scrollHeight;
+                }
+
+                function triggerChaos() {
+                    if(confirm('ATENÇÃO: Isso vai simular uma falha crítica no agente para testar o sistema de Self-Healing. Deseja continuar?')) {
+                        fetch('/api/chaos/crash', { method: 'POST' })
+                            .then(res => res.json())
+                            .then(data => alert(data.message))
+                            .catch(err => alert('Erro ao simular crash: ' + err));
+                    }
                 }
             </script>
                 <!-- Exemplo de Log -->

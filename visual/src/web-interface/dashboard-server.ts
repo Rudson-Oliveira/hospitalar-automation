@@ -138,6 +138,21 @@ app.post('/api/update', (req, res) => {
   });
 });
 
+// API: Chaos Testing (Simular Falha)
+app.post('/api/chaos/crash', (req, res) => {
+  const agent = (global as any).agent;
+  const healer = (global as any).healer;
+
+  if (agent && healer) {
+    console.warn('[CHAOS] 💥 Simulando falha crítica no agente...');
+    // Forçar erro reportado ao healer
+    healer.reportFailure(new Error('Simulação de Crash Manual (Chaos Testing)'));
+    res.json({ message: 'Falha simulada com sucesso! Verifique os logs para ver o Self-Healing em ação.' });
+  } else {
+    res.status(500).json({ error: 'Agente ou Healer não inicializados.' });
+  }
+});
+
 // Health Check
 app.get('/health', (req, res) => {
   res.json({ 
