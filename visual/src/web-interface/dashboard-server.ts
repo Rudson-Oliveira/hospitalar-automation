@@ -6,13 +6,14 @@ import fs from 'fs';
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
 import { BoardOrchestrator } from '../agents/orchestrator';
+import { authMiddleware, requireAdmin } from '../middleware/auth';
 import { AGENTS } from '../agents/personas';
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const PORT = 3002; // Porta diferente do sistema principal para evitar conflito
+const PORT = process.env.PORT || 3002;
 
 // Servir arquivos estáticos (HTML do Dashboard)
 app.use(express.static(path.join(__dirname, '.')));
@@ -66,8 +67,8 @@ wss.on('connection', (ws) => {
   });
 });
 
-// API: Ler Configurações
-app.get('/api/settings', (req, res) => {
+// API: Ler Configurações (Protegido)
+app.get('/api/settings', authMiddleware, requireAdmin, (req, res) => {
   const envPath = path.join(__dirname, '../../.env');
   if (fs.existsSync(envPath)) {
     const envConfig = dotenv.parse(fs.readFileSync(envPath));
@@ -77,8 +78,8 @@ app.get('/api/settings', (req, res) => {
   }
 });
 
-// API: Salvar Configurações
-app.post('/api/settings', express.json(), (req, res) => {
+// API: Salvar Configurações (Protegido)
+app.post('/api/settings', authMiddleware, requireAdmin, express.json(), (req, res) => {
   const envPath = path.join(__dirname, '../../.env');
   const newConfig = req.body;
   

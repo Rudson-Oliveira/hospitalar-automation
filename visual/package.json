@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts",
+    "start": "ts-node src/web-interface/dashboard-server.ts",
     "interact": "ts-node src/interactive.ts",
     "dev:interactive": "ts-node src/interactive.ts",
     "web": "ts-node src/web-interface/server.ts",
