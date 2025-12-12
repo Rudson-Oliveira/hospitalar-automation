@@ -17,12 +17,8 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3002;
 
 // Servir arquivos estáticos (HTML do Dashboard)
-// Em produção (dist/), os arquivos HTML não são copiados automaticamente pelo tsc
-// Precisamos servir a pasta 'src/web-interface' original ou copiar os arquivos no build
-const staticPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, '../../src/web-interface') 
-  : path.join(__dirname, '.');
-
+// Agora os arquivos são copiados para dist/web-interface no build
+const staticPath = path.join(__dirname, '.');
 app.use(express.static(staticPath));
 
 // Instância do Board
