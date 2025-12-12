@@ -105,6 +105,24 @@
                     } else if (payload.type === 'HISTORY') {
                         chatLog.innerHTML = ''; // Limpar mock
                         payload.data.forEach(addMessage);
+                    } else if (payload.type === 'screenshot') {
+                        const img = document.getElementById('live-screen');
+                        const sourceBadge = document.getElementById('agent-source');
+                        
+                        img.src = payload.image;
+                        img.classList.remove('opacity-50');
+                        
+                        if (payload.source) {
+                            sourceBadge.textContent = payload.source.toUpperCase();
+                            sourceBadge.classList.remove('hidden');
+                            
+                            // Cor diferente para MultiOn vs Railway
+                            if (payload.source.includes('MultiOn')) {
+                                sourceBadge.className = 'bg-purple-600 text-white text-xs px-2 py-1 rounded';
+                            } else {
+                                sourceBadge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded';
+                            }
+                        }
                     }
                 };
 
@@ -136,9 +154,27 @@
             </div>
         </div>
 
-        <!-- Coluna Direita: Pendências para o CEO -->
-        <div class="col-span-3 bg-gray-800 rounded-lg border border-gray-700 p-4">
-            <h2 class="font-bold text-lg mb-4 text-red-400">⚠️ Escalonado para Você</h2>
+        <!-- Coluna Direita: Visão do Agente e Pendências -->
+        <div class="col-span-3 space-y-4">
+            <!-- Visão do Agente -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                <h2 class="font-bold text-lg mb-2 text-blue-400">👁️ Visão do Agente</h2>
+                <div class="relative bg-black rounded-lg overflow-hidden aspect-video border border-gray-700">
+                    <img id="live-screen" src="" alt="Aguardando captura..." class="w-full h-full object-contain opacity-50">
+                    <div class="absolute top-2 right-2 flex gap-2">
+                        <div id="agent-source" class="bg-blue-600 text-white text-xs px-2 py-1 rounded hidden">
+                            FONTE: RAILWAY
+                        </div>
+                        <div class="bg-red-600 text-white text-xs px-2 py-1 rounded animate-pulse">
+                            AO VIVO
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pendências -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                <h2 class="font-bold text-lg mb-4 text-red-400">⚠️ Escalonado para Você</h2>
             
             <div class="space-y-3">
                 <div class="bg-gray-700 p-3 rounded border-l-4 border-red-500">
