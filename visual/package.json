@@ -5,7 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && mkdir -p dist/web-interface && cp src/web-interface/*.html dist/web-interface/ && cp src/web-interface/*.js dist/web-interface/",
-    "start": "ts-node src/web-interface/dashboard-server.ts",
+    "start": "ts-node src/server.ts",
+    "server": "ts-node src/server.ts",
+    "dev:server": "ts-node src/server.ts",
     "dev": "ts-node src/web-interface/dashboard-server.ts",
     "interact": "ts-node src/interactive.ts",
     "dev:interactive": "ts-node src/interactive.ts",
@@ -34,6 +36,7 @@
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "ghost-cursor": "^1.4.1",
+    "openai": "^4.20.0",
     "playwright": "1.57.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
