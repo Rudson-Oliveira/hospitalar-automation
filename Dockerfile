@@ -15,11 +15,11 @@ COPY visual/ ./visual/
 # Mudar para o diretório do projeto
 WORKDIR /app/visual
 
-# Instalar dependências
+# Instalar dependências (incluindo ts-node e typescript para execução direta)
 RUN npm install
 
-# Build do projeto
-RUN npm run build
+# REMOVIDO: RUN npm run build
+# O código será executado diretamente via ts-node definido no script 'start'
 
 # Expor porta do servidor
 EXPOSE 3000

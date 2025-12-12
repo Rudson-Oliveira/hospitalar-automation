@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && mkdir -p dist/web-interface && cp src/web-interface/*.html dist/web-interface/ && cp src/web-interface/*.js dist/web-interface/",
-    "start": "node dist/web-interface/dashboard-server.js",
+    "start": "ts-node src/web-interface/dashboard-server.ts",
     "dev": "ts-node src/web-interface/dashboard-server.ts",
     "interact": "ts-node src/interactive.ts",
     "dev:interactive": "ts-node src/interactive.ts",
