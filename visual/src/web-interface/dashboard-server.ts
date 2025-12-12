@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { BoardOrchestrator } from '../agents/orchestrator';
 import { authMiddleware, requireAdmin } from '../middleware/auth';
 import { AGENTS } from '../agents/personas';
+import { AutonomousAgent } from '../agents/autonomous-agent';
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +21,13 @@ app.use(express.static(path.join(__dirname, '.')));
 
 // Instância do Board
 const board = new BoardOrchestrator();
+
+// Iniciar Agente Autônomo (Navegador)
+// Aguarda um pouco para garantir que o servidor WS esteja de pé
+setTimeout(() => {
+  const autonomousAgent = new AutonomousAgent(`ws://localhost:${PORT}`);
+  autonomousAgent.start().catch(console.error);
+}, 5000);
 
 // WebSocket Connection
 wss.on('connection', (ws) => {
