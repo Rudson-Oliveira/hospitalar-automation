@@ -95,8 +95,8 @@ app.post('/api/settings', express.json(), (req, res) => {
 // API: Alterar Modo (Simulação vs Real)
 app.post('/api/mode', express.json(), (req, res) => {
   const { mode } = req.body;
-  if (orchestrator) {
-    orchestrator.setLiveMode(mode === 'LIVE');
+  if (board) {
+    board.setLiveMode(mode === 'LIVE');
     res.json({ message: `Modo alterado para ${mode}` });
   } else {
     res.status(500).json({ error: 'Orquestrador não inicializado' });

@@ -1,4 +1,6 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+// @ts-ignore
+type AxiosInstance = any;
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -22,7 +24,7 @@ export class HospitalarService {
     });
 
     // Interceptor para adicionar token
-    this.api.interceptors.request.use((config) => {
+    this.api.interceptors.request.use((config: any) => {
       if (this.token) {
         config.headers.Authorization = `Bearer ${this.token}`;
       }
