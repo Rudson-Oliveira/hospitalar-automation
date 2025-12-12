@@ -1,4 +1,7 @@
 (function() {
+    console.log("🚀 NAV MENU: Iniciando carregamento...");
+    alert("🚀 NAV MENU: Script carregado! Se você vê isso, o script funcionou.");
+    
     // Estilos CSS para o menu
     const style = document.createElement('style');
     style.textContent = `
