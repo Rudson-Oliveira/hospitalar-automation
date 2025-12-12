@@ -245,18 +245,33 @@ export class AutonomousAgent {
     }
 
     private async startMonitoringLoop() {
-        if (!this.page || !this.ws) return;
+        console.log('[AGENT] Iniciando loop de monitoramento de screenshots...');
+        
+        if (!this.page || !this.ws) {
+            console.error('[AGENT] Erro: Página ou WebSocket não inicializados para monitoramento.');
+            return;
+        }
 
         setInterval(async () => {
-            if (!this.page || !this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+            if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+                console.warn('[AGENT] WebSocket desconectado. Tentando reconectar...');
+                return;
+            }
 
             try {
                 let screenshotBase64 = '';
                 let source = this.mode === 'CLOUD' ? 'Browserbase (Cloud)' : 'Railway (Local)';
 
-                if (this.page) {
+                if (this.page && !this.page.isClosed()) {
+                    // console.log('[AGENT] Capturando screenshot...');
                     const screenshotBuffer = await this.page.screenshot({ timeout: 5000 });
                     screenshotBase64 = screenshotBuffer.toString('base64');
+                    // console.log(`[AGENT] Screenshot capturado (${screenshotBase64.length} bytes)`);
+                } else {
+                    console.error('[AGENT] Página fechada ou nula. Reiniciando navegador...');
+                    this.isRunning = false;
+                    this.start(); // Tentar reiniciar
+                    return;
                 }
                 
                 // Enviar para o Dashboard
@@ -267,13 +282,21 @@ export class AutonomousAgent {
                     timestamp: new Date().toISOString()
                 }));
 
-                // Log de atividade
-                // console.log('[AGENT] Screenshot enviado');
-
             } catch (error) {
                 console.error('[AGENT] Erro ao capturar screenshot:', error);
+                
+                // Enviar imagem de erro para feedback visual
+                try {
+                    this.ws.send(JSON.stringify({
+                        type: 'log',
+                        message: `Erro na captura de tela: ${error}`,
+                        level: 'error'
+                    }));
+                } catch (sendError) {
+                    console.error('[AGENT] Falha ao enviar log de erro:', sendError);
+                }
             }
-        }, 5000); // A cada 5 segundos (reduz carga de CPU)
+        }, 2000); // Aumentei frequência para 2s para teste mais rápido (era 5s)
     }
 
     public async stop() {
