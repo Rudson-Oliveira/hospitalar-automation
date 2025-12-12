@@ -22,10 +22,16 @@ export class AutonomousAgent {
             // Conectar ao Dashboard via WebSocket
             this.connectToDashboard();
 
-            // Iniciar Navegador
+            // Iniciar Navegador com flags otimizadas para Docker/Railway
             this.browser = await chromium.launch({ 
-                headless: true, // Headless em produção
-                args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage', // CRÍTICO: Usa /tmp em vez de /dev/shm (evita crash por falta de memória)
+                    '--disable-gpu',           // Recomendado para ambientes headless
+                    '--single-process'         // Opcional: reduz overhead de processos
+                ]
             });
             
             this.page = await this.browser.newPage();
@@ -48,6 +54,9 @@ export class AutonomousAgent {
         } catch (error) {
             console.error('[AGENT] Erro crítico na inicialização:', error);
             this.isRunning = false;
+            // Tentar reiniciar após falha crítica (ex: crash do navegador)
+            console.log('[AGENT] Tentando reiniciar em 10 segundos...');
+            setTimeout(() => this.start(), 10000);
         }
     }
 
