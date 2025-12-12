@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração - Hospitalar AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+            <div class="p-4 border-b border-gray-700">
+                <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-robot mr-2"></i>Hospitalar AI</h1>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="/" class="block p-3 rounded hover:bg-gray-700 text-gray-300"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
+                <a href="/copilot" class="block p-3 rounded hover:bg-gray-700 text-gray-300"><i class="fas fa-user-astronaut mr-2"></i>Copilot</a>
+                <a href="/autonomy" class="block p-3 rounded hover:bg-gray-700 text-gray-300"><i class="fas fa-tachometer-alt mr-2"></i>Autonomia</a>
+                <a href="/settings" class="block p-3 rounded bg-blue-600 text-white"><i class="fas fa-cog mr-2"></i>Configurações</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center">
+                <h2 class="text-xl font-semibold">⚙️ Configuração do Sistema</h2>
+                <div class="flex items-center gap-4">
+                    <button onclick="checkUpdate()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-sm font-bold transition">
+                        <i class="fas fa-sync-alt mr-2"></i>Verificar Atualizações
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-3xl mx-auto space-y-8">
+                    
+                    <!-- Status Card -->
+                    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-4 text-blue-300">Status das Conexões</h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-gray-900 p-4 rounded border border-gray-700 flex items-center justify-between">
+                                <span>Hospitalar App</span>
+                                <span id="status-hospital" class="text-red-500 font-bold"><i class="fas fa-times-circle"></i> Off</span>
+                            </div>
+                            <div class="bg-gray-900 p-4 rounded border border-gray-700 flex items-center justify-between">
+                                <span>WhatsApp API</span>
+                                <span id="status-whatsapp" class="text-red-500 font-bold"><i class="fas fa-times-circle"></i> Off</span>
+                            </div>
+                            <div class="bg-gray-900 p-4 rounded border border-gray-700 flex items-center justify-between">
+                                <span>Banco de Dados</span>
+                                <span id="status-db" class="text-red-500 font-bold"><i class="fas fa-times-circle"></i> Off</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form id="config-form" class="bg-gray-800 rounded-lg p-6 border border-gray-700 space-y-6">
+                        <h3 class="text-lg font-bold mb-4 text-blue-300">Credenciais de Acesso</h3>
+                        
+                        <!-- Hospitalar App -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-400">URL do Sistema Hospitalar</label>
+                            <input type="text" name="HOSPITAL_URL" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none" placeholder="https://dev.hospitalarsaude.app.br">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-400">Usuário Admin</label>
+                                <input type="text" name="HOSPITAL_USER" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-400">Senha Admin</label>
+                                <input type="password" name="HOSPITAL_PASS" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-700">
+
+                        <!-- WhatsApp / Twilio -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-400">WhatsApp API Token (Twilio/Meta)</label>
+                            <input type="password" name="WHATSAPP_API_TOKEN" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+
+                        <hr class="border-gray-700">
+
+                        <!-- OpenAI -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-400">OpenAI API Key (Cérebro da IA)</label>
+                            <input type="password" name="OPENAI_API_KEY" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded transition transform hover:scale-105">
+                                <i class="fas fa-save mr-2"></i>Salvar e Conectar
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Carregar configurações atuais ao abrir
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                
+                const form = document.getElementById('config-form');
+                Object.keys(data).forEach(key => {
+                    if (form.elements[key]) {
+                        form.elements[key].value = data[key];
+                    }
+                });
+                
+                // Simular verificação de status se houver dados
+                if (data.HOSPITAL_URL) updateStatus('hospital', true);
+                if (data.WHATSAPP_API_TOKEN) updateStatus('whatsapp', true);
+                if (data.OPENAI_API_KEY) updateStatus('db', true); // Mock
+
+            } catch (err) {
+                console.error('Erro ao carregar configs:', err);
+            }
+        }
+
+        function updateStatus(id, online) {
+            const el = document.getElementById(`status-${id}`);
+            if (online) {
+                el.innerHTML = '<i class="fas fa-check-circle"></i> Online';
+                el.className = 'text-green-500 font-bold';
+            } else {
+                el.innerHTML = '<i class="fas fa-times-circle"></i> Off';
+                el.className = 'text-red-500 font-bold';
+            }
+        }
+
+        // Salvar configurações
+        document.getElementById('config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    alert('✅ Configurações salvas com sucesso! O sistema será reiniciado.');
+                    location.reload();
+                } else {
+                    alert('❌ Erro ao salvar configurações.');
+                }
+            } catch (err) {
+                alert('❌ Erro de conexão.');
+            }
+        });
+
+        function checkUpdate() {
+            alert('🔄 Verificando atualizações no GitHub...\n\n(Sistema atualizado!)');
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>

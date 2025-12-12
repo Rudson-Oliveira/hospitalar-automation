@@ -2,6 +2,9 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import path from 'path';
+import fs from 'fs';
+import { exec } from 'child_process';
+import dotenv from 'dotenv';
 import { BoardOrchestrator } from '../agents/orchestrator';
 import { AGENTS } from '../agents/personas';
 
@@ -63,6 +66,44 @@ wss.on('connection', (ws) => {
   });
 });
 
+// API: Ler Configurações
+app.get('/api/settings', (req, res) => {
+  const envPath = path.join(__dirname, '../../.env');
+  if (fs.existsSync(envPath)) {
+    const envConfig = dotenv.parse(fs.readFileSync(envPath));
+    res.json(envConfig);
+  } else {
+    res.json({});
+  }
+});
+
+// API: Salvar Configurações
+app.post('/api/settings', express.json(), (req, res) => {
+  const envPath = path.join(__dirname, '../../.env');
+  const newConfig = req.body;
+  
+  let envContent = '';
+  for (const [key, value] of Object.entries(newConfig)) {
+    envContent += `${key}=${value}\n`;
+  }
+
+  fs.writeFileSync(envPath, envContent);
+  console.log('Configurações atualizadas via Painel Web');
+  res.sendStatus(200);
+});
+
+// API: Atualizar Sistema (Git Pull)
+app.post('/api/update', (req, res) => {
+  exec('git pull origin main', (err, stdout, stderr) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Falha na atualização', details: stderr });
+    }
+    console.log(stdout);
+    res.json({ message: 'Sistema atualizado com sucesso!', output: stdout });
+  });
+});
+
 // Rota principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
@@ -74,6 +115,10 @@ app.get('/copilot', (req, res) => {
 
 app.get('/autonomy', (req, res) => {
   res.sendFile(path.join(__dirname, 'autonomy-dashboard.html'));
+});
+
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'settings.html'));
 });
 
 server.listen(PORT, () => {
