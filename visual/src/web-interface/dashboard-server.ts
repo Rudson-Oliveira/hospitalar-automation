@@ -141,6 +141,10 @@ app.get('/onboarding', (req, res) => {
   res.sendFile(path.join(__dirname, 'onboarding-wizard.html'));
 });
 
+app.get('/nav-menu.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'nav-menu.js'));
+});
+
 server.listen(PORT, () => {
   console.log(`🚀 Dashboard Server rodando em http://localhost:${PORT}`);
   console.log(`   - CEO Dashboard: http://localhost:${PORT}/`);
