@@ -42,7 +42,7 @@ export async function extractData(page: Page, label: string = 'data'): Promise<s
         const cards = Array.from(document.querySelectorAll('.card, .metric, .dashboard-item'));
         return cards.map(card => {
             return {
-                text: card.innerText.replace(/\n/g, ' ').trim(),
+                text: (card as HTMLElement).innerText.replace(/\n/g, ' ').trim(),
                 html: card.innerHTML
             };
         });
