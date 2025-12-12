@@ -1,27 +1,27 @@
-# Usar imagem oficial do Playwright v1.41.0 (mesma versão do package.json)
-# A imagem 'jammy' é baseada no Ubuntu 22.04 LTS
-FROM mcr.microsoft.com/playwright:v1.41.0-jammy
+# Usar imagem oficial do Playwright (versão exata para evitar conflitos)
+FROM mcr.microsoft.com/playwright:v1.57.0-noble
 
 # Definir diretório de trabalho
 WORKDIR /app
 
+# Variáveis de ambiente críticas para Playwright no Docker
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV NODE_ENV=production
+
 # Copiar arquivos de dependência
 COPY package*.json ./
 
-# Instalar dependências do projeto
-RUN npm ci
-
-# Instalar dependências do sistema para o Playwright (garantia extra)
-# O comando 'npx playwright install-deps' garante que tudo que o navegador precisa esteja lá
-RUN npx playwright install-deps chromium
+# Instalar dependências (incluindo TypeScript)
+RUN npm install
 
 # Copiar código fonte
 COPY . .
 
-# Compilar TypeScript
+# Build do projeto (compilar TS e copiar assets)
 RUN npm run build
 
-# Expor porta
+# Expor porta do servidor
 EXPOSE 3000
 
 # Comando de inicialização

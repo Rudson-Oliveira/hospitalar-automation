@@ -67,17 +67,18 @@ export class AutonomousAgent {
 
             if (this.mode === 'LOCAL') {
                 // Iniciar Navegador Local (Railway)
-                console.log('[AGENT] Iniciando Chromium Local (Railway)...');
+                console.log('[AGENT] Iniciando Chromium Local (Railway) com Configuração Otimizada...');
                 this.browser = await chromium.launch({ 
                     headless: true,
-                    timeout: 60000, 
+                    timeout: 120000, // 2 minutos (sugestão Claude)
                     args: [
                         '--no-sandbox',
                         '--disable-setuid-sandbox',
                         '--disable-dev-shm-usage',
                         '--disable-gpu',
-                        '--single-process',
-                        '--no-zygote'
+                        '--single-process', // CRÍTICO para Docker
+                        '--no-zygote',      // CRÍTICO para Docker
+                        '--js-flags=--max-old-space-size=512' // Limite de memória JS
                     ]
                 });
                 console.log('[AGENT] Chromium Local iniciado com sucesso!');
