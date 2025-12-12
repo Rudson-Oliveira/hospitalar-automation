@@ -3,227 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospitalar Automation - Controle</title>
+    <title>Hospitalar Automation - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --border-color: #334155;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            background: white;
-            width: 90%;
-            max-width: 1200px;
-            height: 90vh;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 { font-size: 24px; margin-bottom: 5px; }
-        .header p { font-size: 14px; opacity: 0.9; }
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-            overflow: auto;
-        }
-        .panel {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
-        .panel h2 {
+
+        /* Header */
+        .header {
+            height: 60px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
             font-size: 18px;
-            margin-bottom: 15px;
-            color: #667eea;
+            color: var(--text-primary);
         }
-        #log {
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #333;
-            overflow-y: auto;
+
+        .brand span { color: var(--accent-color); }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge.offline {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
             flex: 1;
-        }
-        .log-entry {
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 5px;
-            background: white;
-            border-left: 3px solid #667eea;
-        }
-        .log-success { border-left-color: #28a745; }
-        .log-error { border-left-color: #dc3545; }
-        .log-info { border-left-color: #17a2b8; }
-        #screenshot-container {
+            height: calc(100vh - 60px);
             position: relative;
+        }
+
+        /* Left Panel - Chat & Logs */
+        .left-panel {
+            width: 40%;
+            min-width: 350px;
+            max-width: 600px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.1s ease;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--accent-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.system {
+            align-self: flex-start;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.log {
+            align-self: center;
+            max-width: 100%;
+            background: transparent;
+            padding: 4px 0;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+            border: none;
+        }
+
+        .input-area {
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            background-color: var(--bg-primary);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-color);
+        }
+
+        #commandInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            padding: 8px;
+            outline: none;
+        }
+
+        #sendBtn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        #sendBtn:hover { background-color: var(--accent-hover); }
+
+        /* Right Panel - Live View */
+        .right-panel {
+            flex: 1;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .control-btn {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover { background-color: rgba(0, 0, 0, 0.8); }
+
+        .live-indicator {
+            background-color: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        #screenshot-container {
             width: 100%;
             height: 100%;
             display: flex;
-            justify-content: center;
             align-items: center;
-            cursor: crosshair;
+            justify-content: center;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
         }
+
         #screenshot {
             max-width: 100%;
             max-height: 100%;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            object-fit: contain;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease;
+            cursor: crosshair;
         }
-        .input-area {
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 2px solid #e9ecef;
-            display: flex;
-            gap: 10px;
+
+        /* Resizer */
+        .resizer {
+            width: 4px;
+            background-color: var(--bg-primary);
+            cursor: col-resize;
+            transition: background-color 0.2s;
+            position: relative;
+            z-index: 30;
         }
-        #commandInput {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            font-size: 16px;
-            outline: none;
-        }
-        #commandInput:focus { border-color: #764ba2; }
-        #sendBtn {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        #sendBtn:hover { transform: scale(1.05); }
-        #sendBtn:active { transform: scale(0.95); }
-        .status {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
+
+        .resizer:hover, .resizer.active { background-color: var(--accent-color); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Source Badge */
+        .source-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 12px;
-            font-weight: bold;
-        }
-        .status.online {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status.offline {
-            background: #f8d7da;
-            color: #721c24;
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>🤖 Hospitalar Automation</h1>
-                <p>Controle Inteligente de Automação</p>
-            </div>
-            <span class="status offline" id="status">● Offline</span>
+    <div class="header">
+        <div class="brand">
+            <span>🤖</span> Hospitalar Automation
         </div>
-        
-        <div class="content">
-            <div class="panel">
-                <h2>📊 Log de Atividades</h2>
-                <div id="log">
-                    <div class="log-entry log-info">Aguardando conexão com o agente...</div>
+        <div class="status-badge offline" id="status">
+            <div class="status-dot"></div>
+            <span>Desconectado</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Left Panel -->
+        <div class="left-panel" id="leftPanel">
+            <div class="chat-container">
+                <div class="messages-area" id="messagesArea">
+                    <div class="message system">
+                        Olá! Sou seu assistente de automação hospitalar. Como posso ajudar hoje?
+                    </div>
+                </div>
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <input type="text" id="commandInput" placeholder="Digite um comando ou pergunte algo..." autocomplete="off">
+                        <button id="sendBtn">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resizer -->
+        <div class="resizer" id="resizer"></div>
+
+        <!-- Right Panel -->
+        <div class="right-panel" id="rightPanel">
+            <div class="view-header">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    AO VIVO
+                </div>
+                <div class="view-controls">
+                    <button class="control-btn" id="zoomInBtn" title="Zoom In">+</button>
+                    <button class="control-btn" id="zoomOutBtn" title="Zoom Out">-</button>
+                    <button class="control-btn" id="fitBtn" title="Ajustar à Tela">⤢</button>
+                    <button class="control-btn" id="downloadBtn" title="Download Screenshot">⬇</button>
                 </div>
             </div>
             
-            <div class="panel">
-                <h2>📸 Visualização em Tempo Real (Clique para Interagir)</h2>
-                <div id="screenshot-container">
-                    <img id="screenshot" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='16'%3EAguardando captura...%3C/text%3E%3C/svg%3E" alt="Screenshot">
-                </div>
+            <div id="screenshot-container">
+                <img id="screenshot" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Crect fill='%231e293b' width='800' height='600'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23475569' font-family='sans-serif' font-size='24'%3EAguardando conexão...%3C/text%3E%3C/svg%3E" alt="Live View">
             </div>
-        </div>
-        
-        <div class="input-area">
-            <input type="text" id="commandInput" placeholder="Digite um comando: ver, ler, clicar 'botão', navegar 'url', relatorio..." autofocus>
-            <button id="sendBtn">Enviar ▶</button>
+
+            <div class="source-badge" id="sourceBadge">Fonte: Desconhecida</div>
         </div>
     </div>
 
     <script>
-        const ws = new WebSocket('ws://localhost:3002');
-        const log = document.getElementById('log');
+        // WebSocket & Core Logic
+        const ws = new WebSocket(window.location.protocol === 'https:' ? 'wss://' + window.location.host : 'ws://localhost:3002');
+        const messagesArea = document.getElementById('messagesArea');
         const commandInput = document.getElementById('commandInput');
         const sendBtn = document.getElementById('sendBtn');
         const screenshot = document.getElementById('screenshot');
         const status = document.getElementById('status');
+        const statusText = status.querySelector('span');
+        const sourceBadge = document.getElementById('sourceBadge');
 
+        // Zoom & Pan Logic
+        let scale = 1;
+        let panning = false;
+        let pointX = 0;
+        let pointY = 0;
+        let startX = 0;
+        let startY = 0;
+        const container = document.getElementById('screenshot-container');
+
+        // Resizer Logic
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('leftPanel');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const containerWidth = document.body.clientWidth;
+            const newWidth = (e.clientX / containerWidth) * 100;
+            if (newWidth > 20 && newWidth < 80) {
+                leftPanel.style.width = `${newWidth}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            resizer.classList.remove('active');
+            document.body.style.cursor = 'default';
+        });
+
+        // WebSocket Events
         ws.onopen = () => {
-            addLog('Conectado ao agente', 'success');
-            status.textContent = '● Online';
-            status.className = 'status online';
+            updateStatus(true);
+            addLog('Conectado ao servidor de automação', 'system');
         };
 
         ws.onclose = () => {
-            addLog('Desconectado do agente', 'error');
-            status.textContent = '● Offline';
-            status.className = 'status offline';
+            updateStatus(false);
+            addLog('Conexão perdida. Tentando reconectar...', 'error');
         };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
             if (data.type === 'log') {
-                addLog(data.message, data.level);
-            }
-            
-            if (data.type === 'screenshot') {
-                screenshot.src = data.image;
+                addLog(data.message, 'log');
+            } else if (data.type === 'screenshot') {
+                updateScreenshot(data);
             }
         };
 
-        function addLog(message, level = 'info') {
-            const entry = document.createElement('div');
-            entry.className = `log-entry log-${level}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            log.appendChild(entry);
-            log.scrollTop = log.scrollHeight;
+        function updateStatus(online) {
+            if (online) {
+                status.classList.remove('offline');
+                statusText.textContent = 'Conectado';
+            } else {
+                status.classList.add('offline');
+                statusText.textContent = 'Desconectado';
+            }
+        }
+
+        function updateScreenshot(data) {
+            screenshot.src = data.image;
+            if (data.source) {
+                sourceBadge.textContent = `Fonte: ${data.source}`;
+            }
+        }
+
+        function addLog(text, type = 'system') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            
+            // Format timestamp for logs
+            if (type === 'log') {
+                const time = new Date().toLocaleTimeString();
+                msgDiv.textContent = `[${time}] ${text}`;
+            } else {
+                msgDiv.textContent = text;
+            }
+            
+            messagesArea.appendChild(msgDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
         function sendCommand() {
-            const command = commandInput.value.trim();
-            if (!command) return;
-            
-            addLog(`→ Comando: ${command}`, 'info');
-            ws.send(JSON.stringify({ type: 'command', command }));
+            const text = commandInput.value.trim();
+            if (!text) return;
+
+            addLog(text, 'user');
+            ws.send(JSON.stringify({ type: 'command', command: text }));
             commandInput.value = '';
         }
 
-        // Click-to-Control Logic
+        // Event Listeners
+        sendBtn.addEventListener('click', sendCommand);
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+
+        // Click-to-Control
         screenshot.addEventListener('click', (e) => {
+            if (scale > 1) return; // Disable click when zoomed to avoid confusion
+            
             const rect = screenshot.getBoundingClientRect();
             const x = (e.clientX - rect.left) / rect.width;
             const y = (e.clientY - rect.top) / rect.height;
 
-            addLog(`🖱️ Clique enviado: X=${(x*100).toFixed(1)}% Y=${(y*100).toFixed(1)}%`, 'info');
+            addLog(`Clique na posição: ${(x*100).toFixed(1)}%, ${(y*100).toFixed(1)}%`, 'log');
             
             ws.send(JSON.stringify({
                 type: 'click_coordinate',
@@ -232,9 +509,61 @@
             }));
         });
 
-        sendBtn.addEventListener('click', sendCommand);
-        commandInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendCommand();
+        // Zoom Controls
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            scale = Math.min(scale + 0.5, 5);
+            updateTransform();
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            scale = Math.max(scale - 0.5, 1);
+            if (scale === 1) { pointX = 0; pointY = 0; }
+            updateTransform();
+        });
+
+        document.getElementById('fitBtn').addEventListener('click', () => {
+            scale = 1;
+            pointX = 0;
+            pointY = 0;
+            updateTransform();
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `screenshot-${new Date().toISOString()}.png`;
+            link.href = screenshot.src;
+            link.click();
+        });
+
+        function updateTransform() {
+            screenshot.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+        }
+
+        // Pan Logic (Basic implementation)
+        container.addEventListener('mousedown', (e) => {
+            if (scale <= 1) return;
+            panning = true;
+            startX = e.clientX - pointX;
+            startY = e.clientY - pointY;
+            container.style.cursor = 'grabbing';
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!panning) return;
+            e.preventDefault();
+            pointX = e.clientX - startX;
+            pointY = e.clientY - startY;
+            updateTransform();
+        });
+
+        container.addEventListener('mouseup', () => {
+            panning = false;
+            container.style.cursor = 'crosshair';
+        });
+
+        container.addEventListener('mouseleave', () => {
+            panning = false;
+            container.style.cursor = 'crosshair';
         });
     </script>
 </body>
