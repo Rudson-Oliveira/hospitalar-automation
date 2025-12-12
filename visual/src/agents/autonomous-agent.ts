@@ -52,65 +52,89 @@ export class AutonomousAgent {
             this.connectToDashboard();
 
             if (this.mode === 'CLOUD' && this.browserbase) {
-                console.log('[AGENT] Iniciando sessão remota via Browserbase...');
-                try {
-                    const session = await this.browserbase.createSession();
-                    // Conectar ao navegador remoto via CDP (WebSocket)
-                    this.browser = await chromium.connectOverCDP(session.connectUrl);
-                    console.log('[AGENT] Conectado ao Browserbase com sucesso!');
-                } catch (e) {
-                    console.error('[AGENT] Falha ao conectar no Browserbase:', e);
-                    console.log('[AGENT] Caindo para modo LOCAL (Fallback)...');
-                    this.mode = 'LOCAL';
-                }
-            }
-
-            if (this.mode === 'LOCAL') {
-                // Iniciar Navegador Local (Railway)
-                console.log('[AGENT] Iniciando Chromium Local (Railway) com Configuração Otimizada...');
-                this.browser = await chromium.launch({ 
-                    headless: true,
-                    timeout: 120000, // 2 minutos (sugestão Claude)
-                    args: [
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-dev-shm-usage',
-                        '--disable-gpu',
-                        '--single-process', // CRÍTICO para Docker
-                        '--no-zygote',      // CRÍTICO para Docker
-                        '--js-flags=--max-old-space-size=512' // Limite de memória JS
-                    ]
-                });
-                console.log('[AGENT] Chromium Local iniciado com sucesso!');
+                await this.startCloudBrowser();
+            } else {
+                await this.startLocalBrowser();
             }
             
-            this.page = await this.browser.newPage();
-            await this.page.setViewportSize({ width: 1280, height: 720 });
+            if (this.browser) {
+                this.page = await this.browser.newPage();
+                await this.page.setViewportSize({ width: 1280, height: 720 });
 
-            // Navegar para o sistema alvo (simulação ou real)
-            const targetUrl = process.env.HOSPITALAR_API_URL || 'https://dev.hospitalarsaude.app.br';
-            console.log(`[AGENT] Navegando para: ${targetUrl}`);
-            
-            try {
+                // Navegar para o sistema alvo (simulação ou real)
+                const targetUrl = process.env.HOSPITALAR_API_URL || 'https://dev.hospitalarsaude.app.br';
                 console.log(`[AGENT] Navegando para: ${targetUrl}`);
-                await this.page.goto(targetUrl, { 
-                    timeout: 60000, 
-                    waitUntil: 'domcontentloaded' // Não esperar carregar tudo (imagens, analytics, etc)
-                });
-                console.log('[AGENT] Página carregada!');
-            } catch (e) {
-                console.error(`[AGENT] Erro ao carregar página (continuando): ${e}`);
-            }
+                
+                try {
+                    await this.page.goto(targetUrl, { 
+                        timeout: 60000, 
+                        waitUntil: 'domcontentloaded' // Não esperar carregar tudo (imagens, analytics, etc)
+                    });
+                    console.log('[AGENT] Página carregada!');
+                } catch (e) {
+                    console.error(`[AGENT] Erro ao carregar página (continuando): ${e}`);
+                }
 
-            // Loop de monitoramento e screenshots
-            this.startMonitoringLoop();
+                // Loop de monitoramento e screenshots
+                this.startMonitoringLoop();
+            }
 
         } catch (error) {
             console.error('[AGENT] Erro crítico na inicialização:', error);
+            
+            // SELF-HEALING: Se falhar no modo LOCAL, tentar CLOUD (Browserbase)
+            if (this.mode === 'LOCAL' && this.browserbase) {
+                console.log('🔄 ACTIVATING BROWSERBASE FALLBACK...');
+                this.mode = 'CLOUD';
+                this.isRunning = false; // Resetar flag para permitir restart
+                setTimeout(() => this.start(), 1000); // Reiniciar imediatamente em modo CLOUD
+                return;
+            }
+
             this.isRunning = false;
             // Tentar reiniciar após falha crítica (ex: crash do navegador)
             console.log('[AGENT] Tentando reiniciar em 10 segundos...');
             setTimeout(() => this.start(), 10000);
+        }
+    }
+
+    private async startCloudBrowser() {
+        if (!this.browserbase) throw new Error('Browserbase client not initialized');
+        console.log('[AGENT] Iniciando sessão remota via Browserbase...');
+        try {
+            const session = await this.browserbase.createSession();
+            // Conectar ao navegador remoto via CDP (WebSocket)
+            this.browser = await chromium.connectOverCDP(session.connectUrl);
+            console.log('[AGENT] Conectado ao Browserbase com sucesso!');
+        } catch (e) {
+            console.error('[AGENT] Falha ao conectar no Browserbase:', e);
+            console.log('[AGENT] Caindo para modo LOCAL (Fallback)...');
+            this.mode = 'LOCAL';
+            await this.startLocalBrowser();
+        }
+    }
+
+    private async startLocalBrowser() {
+        // Iniciar Navegador Local (Railway)
+        console.log('[AGENT] Iniciando Chromium Local (Railway) com Configuração Otimizada...');
+        try {
+            this.browser = await chromium.launch({ 
+                headless: true,
+                timeout: 120000, // 2 minutos (sugestão Claude)
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--single-process', // CRÍTICO para Docker
+                    '--no-zygote',      // CRÍTICO para Docker
+                    '--js-flags=--max-old-space-size=512' // Limite de memória JS
+                ]
+            });
+            console.log('[AGENT] Chromium Local iniciado com sucesso!');
+        } catch (error) {
+            console.error('[AGENT] Falha ao iniciar Chromium Local:', error);
+            throw error; // Repassar erro para ativar o Self-Healing no catch do start()
         }
     }
 
