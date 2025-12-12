@@ -8,7 +8,10 @@
             right: 1rem;
             display: flex;
             gap: 0.5rem;
-            z-index: 9999;
+            z-index: 2147483647; /* Max Z-Index */
+            border: 2px solid red; /* DEBUG VISUAL */
+            background: rgba(255, 0, 0, 0.2); /* DEBUG VISUAL */
+            padding: 5px;
             font-family: sans-serif;
         }
         .nav-btn {
