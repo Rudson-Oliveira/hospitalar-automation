@@ -3,230 +3,568 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Board - CEO Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Hospitalar Automation - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --border-color: #334155;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            height: 60px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+
+        .brand span { color: var(--accent-color); }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge.offline {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        /* Left Panel - Chat & Logs */
+        .left-panel {
+            width: 40%;
+            min-width: 350px;
+            max-width: 600px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.1s ease;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--accent-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.system {
+            align-self: flex-start;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.log {
+            align-self: center;
+            max-width: 100%;
+            background: transparent;
+            padding: 4px 0;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+            border: none;
+        }
+
+        .input-area {
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            background-color: var(--bg-primary);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-color);
+        }
+
+        #commandInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            padding: 8px;
+            outline: none;
+        }
+
+        #sendBtn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        #sendBtn:hover { background-color: var(--accent-hover); }
+
+        /* Right Panel - Live View */
+        .right-panel {
+            flex: 1;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .control-btn {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover { background-color: rgba(0, 0, 0, 0.8); }
+
+        .live-indicator {
+            background-color: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        #screenshot-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        #screenshot {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease;
+            cursor: crosshair;
+        }
+
+        /* Resizer */
+        .resizer {
+            width: 4px;
+            background-color: var(--bg-primary);
+            cursor: col-resize;
+            transition: background-color 0.2s;
+            position: relative;
+            z-index: 30;
+        }
+
+        .resizer:hover, .resizer.active { background-color: var(--accent-color); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Source Badge */
+        .source-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white font-sans">
-
-    <!-- Header -->
-    <header class="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-blue-400">🤖 The Board <span class="text-sm text-gray-400">| Sistema Multi-Agente Autônomo</span></h1>
-        <div class="flex items-center gap-3 bg-gray-900 px-4 py-2 rounded-full border border-gray-700 ml-4">
-            <span class="text-sm text-gray-400">Modo:</span>
-            <button id="mode-toggle" onclick="toggleMode()" class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none bg-gray-700">
-                <span id="mode-indicator" class="translate-x-1 inline-block w-4 h-4 transform bg-white rounded-full transition-transform"></span>
-            </button>
-            <span id="mode-label" class="text-sm font-bold text-gray-400">SIMULAÇÃO</span>
+<body>
+    <div class="header">
+        <div class="brand">
+            <span>🤖</span> Hospitalar Automation
         </div>
-        <div class="flex gap-4">
-            <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">● Sistema Online</span>
-            <button onclick="triggerChaos()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-1 rounded text-sm font-bold" title="Testar Failover Automático">💥 SIMULAR CRASH</button>
-            <button class="bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm font-bold">PARADA DE EMERGÊNCIA</button>
+        <div class="status-badge offline" id="status">
+            <div class="status-dot"></div>
+            <span>Desconectado</span>
         </div>
-    </header>
-
-    <div class="grid grid-cols-12 gap-4 p-6 h-screen">
-        
-        <!-- Coluna Esquerda: KPIs em Tempo Real -->
-        <div class="col-span-3 space-y-4">
-            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                <h3 class="text-gray-400 text-sm uppercase">Saúde Financeira (Hoje)</h3>
-                <p class="text-3xl font-bold text-green-400">R$ 12.450,00</p>
-                <p class="text-xs text-green-600">▲ 15% vs ontem</p>
-            </div>
-            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                <h3 class="text-gray-400 text-sm uppercase">Risco de Churn</h3>
-                <p class="text-3xl font-bold text-yellow-400">2.4%</p>
-                <p class="text-xs text-gray-500">Estável</p>
-            </div>
-            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                <h3 class="text-gray-400 text-sm uppercase">Decisões Autônomas</h3>
-                <p class="text-3xl font-bold text-blue-400">42</p>
-                <p class="text-xs text-gray-500">Últimas 24h</p>
-            </div>
-        </div>
-
-        <!-- Coluna Central: Sala de Reunião (Chat) -->
-        <div class="col-span-6 bg-gray-800 rounded-lg border border-gray-700 flex flex-col">
-            <div class="p-4 border-b border-gray-700 bg-gray-850">
-                <h2 class="font-bold text-lg">💬 Sala de Reunião Virtual</h2>
-                <p class="text-xs text-gray-400">Acompanhe as discussões dos agentes em tempo real</p>
-            </div>
-            <div id="chat-log" class="flex-1 p-4 overflow-y-auto space-y-3 font-mono text-sm">
-            <!-- WebSocket Script -->
-            <script>
-                let isLiveMode = false;
-                const chatLog = document.getElementById('chat-log');
-                const ws = new WebSocket('ws://localhost:3002');
-
-                function toggleMode() {
-                    isLiveMode = !isLiveMode;
-                    const btn = document.getElementById('mode-toggle');
-                    const indicator = document.getElementById('mode-indicator');
-                    const label = document.getElementById('mode-label');
-
-                    if (isLiveMode) {
-                        btn.classList.remove('bg-gray-700');
-                        btn.classList.add('bg-green-600');
-                        indicator.classList.remove('translate-x-1');
-                        indicator.classList.add('translate-x-6');
-                        label.innerText = "REAL DATA";
-                        label.classList.remove('text-gray-400');
-                        label.classList.add('text-green-500');
-                        
-                        // Enviar comando para o servidor
-                        fetch('/api/mode', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ mode: 'LIVE' })
-                        });
-                    } else {
-                        btn.classList.add('bg-gray-700');
-                        btn.classList.remove('bg-green-600');
-                        indicator.classList.add('translate-x-1');
-                        indicator.classList.remove('translate-x-6');
-                        label.innerText = "SIMULAÇÃO";
-                        label.classList.add('text-gray-400');
-                        label.classList.remove('text-green-500');
-
-                        fetch('/api/mode', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ mode: 'SIMULATION' })
-                        });
-                    }
-                }
-
-                ws.onmessage = (event) => {
-                    const payload = JSON.parse(event.data);
-                    
-                    if (payload.type === 'NEW_MESSAGE') {
-                        addMessage(payload.data);
-                    } else if (payload.type === 'HISTORY') {
-                        chatLog.innerHTML = ''; // Limpar mock
-                        payload.data.forEach(addMessage);
-                    } else if (payload.type === 'screenshot') {
-                        const img = document.getElementById('live-screen');
-                        const sourceBadge = document.getElementById('agent-source');
-                        
-                        img.src = payload.image;
-                        img.classList.remove('opacity-50');
-                        
-                        if (payload.source) {
-                            sourceBadge.textContent = payload.source.toUpperCase();
-                            sourceBadge.classList.remove('hidden');
-                            
-                            // Cor diferente para Browserbase vs Railway
-                            if (payload.source.includes('Browserbase') || payload.source.includes('Cloud')) {
-                                sourceBadge.className = 'bg-orange-600 text-white text-xs px-2 py-1 rounded';
-                            } else {
-                                sourceBadge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded';
-                            }
-                        }
-                    }
-                };
-
-                function addMessage(msg) {
-                    const div = document.createElement('div');
-                    div.className = 'flex gap-2';
-                    div.innerHTML = `
-                        <span class="text-blue-400 font-bold">[${msg.from}]</span>
-                        <span class="text-gray-300">${msg.content}</span>
-                        <span class="text-xs text-gray-600 ml-auto">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-                    `;
-                    chatLog.appendChild(div);
-                    chatLog.scrollTop = chatLog.scrollHeight;
-                }
-
-                function triggerChaos() {
-                    if(confirm('ATENÇÃO: Isso vai simular uma falha crítica no agente para testar o sistema de Self-Healing. Deseja continuar?')) {
-                        fetch('/api/chaos/crash', { method: 'POST' })
-                            .then(res => res.json())
-                            .then(data => alert(data.message))
-                            .catch(err => alert('Erro ao simular crash: ' + err));
-                    }
-                }
-            </script>
-                <!-- Exemplo de Log -->
-                <div class="flex gap-2">
-                    <span class="text-purple-400 font-bold">[SCOUT]</span>
-                    <span class="text-gray-300">Detectei anomalia no servidor de e-mail. Fila > 500.</span>
-                </div>
-                <div class="flex gap-2">
-                    <span class="text-blue-400 font-bold">[TECH]</span>
-                    <span class="text-gray-300">Reiniciando serviço postfix... Feito. Fila drenando.</span>
-                </div>
-                <div class="flex gap-2">
-                    <span class="text-yellow-400 font-bold">[ALPHA]</span>
-                    <span class="text-gray-300">Bom trabalho. Scout, monitore por mais 30min.</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Coluna Direita: Visão do Agente e Pendências -->
-        <div class="col-span-3 space-y-4">
-            <!-- Visão do Agente -->
-            <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <h2 class="font-bold text-lg mb-2 text-blue-400">👁️ Visão do Agente</h2>
-                <div class="relative bg-black rounded-lg overflow-hidden aspect-video border border-gray-700">
-                    <img id="live-screen" src="" alt="Aguardando captura..." class="w-full h-full object-contain opacity-50">
-                    <div class="absolute top-2 right-2 flex gap-2">
-                        <div id="agent-source" class="bg-blue-600 text-white text-xs px-2 py-1 rounded hidden">
-                            FONTE: RAILWAY
-                        </div>
-                        <div class="bg-red-600 text-white text-xs px-2 py-1 rounded animate-pulse">
-                            AO VIVO
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pendências -->
-            <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <h2 class="font-bold text-lg mb-4 text-red-400">⚠️ Escalonado para Você</h2>
-            
-            <div class="space-y-3">
-                <div class="bg-gray-700 p-3 rounded border-l-4 border-red-500">
-                    <h4 class="font-bold text-sm">Aprovação de Orçamento</h4>
-                    <p class="text-xs text-gray-300 mt-1">Growth quer aumentar budget de Ads em R$ 5.000 para Black Friday.</p>
-                    <div class="mt-2 flex gap-2">
-                        <button class="bg-green-600 text-xs px-2 py-1 rounded hover:bg-green-500">Aprovar</button>
-                        <button class="bg-red-600 text-xs px-2 py-1 rounded hover:bg-red-500">Negar</button>
-                    </div>
-                </div>
-
-                <div class="bg-gray-700 p-3 rounded border-l-4 border-yellow-500">
-                    <h4 class="font-bold text-sm">Mudança Estratégica</h4>
-                    <p class="text-xs text-gray-300 mt-1">Alpha sugere pausar campanha "Inverno" devido ao calor.</p>
-                    <div class="mt-2 flex gap-2">
-                        <button class="bg-green-600 text-xs px-2 py-1 rounded hover:bg-green-500">Aprovar</button>
-                        <button class="bg-red-600 text-xs px-2 py-1 rounded hover:bg-red-500">Negar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- Integração do Assistente Virtual -->
-    <div id="assistant-container"></div>
+    <div class="main-container">
+        <!-- Left Panel -->
+        <div class="left-panel" id="leftPanel">
+            <div class="chat-container">
+                <div class="messages-area" id="messagesArea">
+                    <div class="message system">
+                        Olá! Sou seu assistente de automação hospitalar. Como posso ajudar hoje?
+                    </div>
+                </div>
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <input type="text" id="commandInput" placeholder="Digite um comando ou pergunte algo..." autocomplete="off">
+                        <button id="sendBtn">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resizer -->
+        <div class="resizer" id="resizer"></div>
+
+        <!-- Right Panel -->
+        <div class="right-panel" id="rightPanel">
+            <div class="view-header">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    AO VIVO
+                </div>
+                <div class="view-controls">
+                    <button class="control-btn" id="zoomInBtn" title="Zoom In">+</button>
+                    <button class="control-btn" id="zoomOutBtn" title="Zoom Out">-</button>
+                    <button class="control-btn" id="fitBtn" title="Ajustar à Tela">⤢</button>
+                    <button class="control-btn" id="downloadBtn" title="Download Screenshot">⬇</button>
+                </div>
+            </div>
+            
+            <div id="screenshot-container">
+                <img id="screenshot" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Crect fill='%231e293b' width='800' height='600'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23475569' font-family='sans-serif' font-size='24'%3EAguardando conexão...%3C/text%3E%3C/svg%3E" alt="Live View">
+            </div>
+
+            <div class="source-badge" id="sourceBadge">Fonte: Desconhecida</div>
+        </div>
+    </div>
+
     <script>
-        fetch('/virtual-assistant.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('assistant-container').innerHTML = html;
-                // Re-executar scripts do HTML injetado
-                const scripts = document.getElementById('assistant-container').querySelectorAll("script");
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement("script");
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
-            });
+        // WebSocket & Core Logic
+        const ws = new WebSocket(window.location.protocol === 'https:' ? 'wss://' + window.location.host : 'ws://localhost:3002');
+        const messagesArea = document.getElementById('messagesArea');
+        const commandInput = document.getElementById('commandInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const screenshot = document.getElementById('screenshot');
+        const status = document.getElementById('status');
+        const statusText = status.querySelector('span');
+        const sourceBadge = document.getElementById('sourceBadge');
+
+        // Zoom & Pan Logic
+        let scale = 1;
+        let panning = false;
+        let pointX = 0;
+        let pointY = 0;
+        let startX = 0;
+        let startY = 0;
+        const container = document.getElementById('screenshot-container');
+
+        // Resizer Logic
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('leftPanel');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const containerWidth = document.body.clientWidth;
+            const newWidth = (e.clientX / containerWidth) * 100;
+            if (newWidth > 20 && newWidth < 80) {
+                leftPanel.style.width = `${newWidth}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            resizer.classList.remove('active');
+            document.body.style.cursor = 'default';
+        });
+
+        // WebSocket Events
+        ws.onopen = () => {
+            updateStatus(true);
+            addLog('Conectado ao servidor de automação', 'system');
+        };
+
+        ws.onclose = () => {
+            updateStatus(false);
+            addLog('Conexão perdida. Tentando reconectar...', 'error');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'log') {
+                addLog(data.message, 'log');
+            } else if (data.type === 'screenshot') {
+                updateScreenshot(data);
+            }
+        };
+
+        function updateStatus(online) {
+            if (online) {
+                status.classList.remove('offline');
+                statusText.textContent = 'Conectado';
+            } else {
+                status.classList.add('offline');
+                statusText.textContent = 'Desconectado';
+            }
+        }
+
+        function updateScreenshot(data) {
+            screenshot.src = data.image;
+            if (data.source) {
+                sourceBadge.textContent = `Fonte: ${data.source}`;
+            }
+        }
+
+        function addLog(text, type = 'system') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            
+            // Format timestamp for logs
+            if (type === 'log') {
+                const time = new Date().toLocaleTimeString();
+                msgDiv.textContent = `[${time}] ${text}`;
+            } else {
+                msgDiv.textContent = text;
+            }
+            
+            messagesArea.appendChild(msgDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function sendCommand() {
+            const text = commandInput.value.trim();
+            if (!text) return;
+
+            addLog(text, 'user');
+            ws.send(JSON.stringify({ type: 'command', command: text }));
+            commandInput.value = '';
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', sendCommand);
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+
+        // Click-to-Control
+        screenshot.addEventListener('click', (e) => {
+            if (scale > 1) return; // Disable click when zoomed to avoid confusion
+            
+            const rect = screenshot.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+
+            addLog(`Clique na posição: ${(x*100).toFixed(1)}%, ${(y*100).toFixed(1)}%`, 'log');
+            
+            ws.send(JSON.stringify({
+                type: 'click_coordinate',
+                x: x,
+                y: y
+            }));
+        });
+
+        // Zoom Controls
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            scale = Math.min(scale + 0.5, 5);
+            updateTransform();
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            scale = Math.max(scale - 0.5, 1);
+            if (scale === 1) { pointX = 0; pointY = 0; }
+            updateTransform();
+        });
+
+        document.getElementById('fitBtn').addEventListener('click', () => {
+            scale = 1;
+            pointX = 0;
+            pointY = 0;
+            updateTransform();
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `screenshot-${new Date().toISOString()}.png`;
+            link.href = screenshot.src;
+            link.click();
+        });
+
+        function updateTransform() {
+            screenshot.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+        }
+
+        // Pan Logic (Basic implementation)
+        container.addEventListener('mousedown', (e) => {
+            if (scale <= 1) return;
+            panning = true;
+            startX = e.clientX - pointX;
+            startY = e.clientY - pointY;
+            container.style.cursor = 'grabbing';
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!panning) return;
+            e.preventDefault();
+            pointX = e.clientX - startX;
+            pointY = e.clientY - startY;
+            updateTransform();
+        });
+
+        container.addEventListener('mouseup', () => {
+            panning = false;
+            container.style.cursor = 'crosshair';
+        });
+
+        container.addEventListener('mouseleave', () => {
+            panning = false;
+            container.style.cursor = 'crosshair';
+        });
     </script>
-        <!-- Menu de Navegação Global -->
-    <script src="/nav-menu.js"></script>
 </body>
 </html>
