@@ -9,16 +9,16 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV NODE_ENV=production
 
-# Copiar arquivos de dependência da pasta visual/
-COPY visual/package*.json ./
+# Copiar a pasta do projeto 'visual' para dentro do container
+COPY visual/ ./visual/
 
-# Instalar dependências (incluindo TypeScript)
+# Mudar para o diretório do projeto
+WORKDIR /app/visual
+
+# Instalar dependências
 RUN npm install
 
-# Copiar código fonte da pasta visual/
-COPY visual/ .
-
-# Build do projeto (compilar TS e copiar assets)
+# Build do projeto
 RUN npm run build
 
 # Expor porta do servidor
