@@ -1,6 +1,10 @@
 import { chromium, Browser, Page } from 'playwright';
 import WebSocket from 'ws';
 import { BrowserbaseClient } from '../services/browserbase-client';
+import { AIBrain } from '../core/ai-brain';
+import { TaskOrchestrator } from '../core/task-orchestrator';
+import { ActionExecutor } from '../core/action-executor';
+import { Task } from '../core/types';
 
 export class AutonomousAgent {
     private browser: Browser | null = null;
@@ -9,12 +13,18 @@ export class AutonomousAgent {
     private isRunning: boolean = false;
     private dashboardUrl: string;
     private browserbase: BrowserbaseClient | null = null;
-    private mode: 'LOCAL' | 'CLOUD' = 'LOCAL'; // CLOUD = Browserbase
+    private mode: 'LOCAL' | 'CLOUD' = 'LOCAL';
+    
+    // Novos componentes da arquitetura cognitiva
+    private brain: AIBrain;
+    private orchestrator: TaskOrchestrator;
+    private executor: ActionExecutor | null = null;
 
     constructor(dashboardUrl: string = 'ws://localhost:3002') {
         this.dashboardUrl = dashboardUrl;
+        this.brain = new AIBrain();
+        this.orchestrator = new TaskOrchestrator();
         
-        // Inicializar Browserbase se chaves existirem
         if (process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID) {
             this.browserbase = new BrowserbaseClient(
                 process.env.BROWSERBASE_API_KEY,
@@ -22,7 +32,6 @@ export class AutonomousAgent {
             );
         }
         
-        // Definir modo inicial
         this.mode = process.env.DEFAULT_AGENT_MODE === 'CLOUD' && this.browserbase ? 'CLOUD' : 'LOCAL';
         console.log(`[AGENT] Inicializado em modo: ${this.mode}`);
     }
@@ -48,7 +57,6 @@ export class AutonomousAgent {
         console.log('[AGENT] Iniciando Agente Autônomo...');
         
         try {
-            // Conectar ao Dashboard via WebSocket
             this.connectToDashboard();
 
             if (this.mode === 'CLOUD' && this.browserbase) {
@@ -60,39 +68,38 @@ export class AutonomousAgent {
             if (this.browser) {
                 this.page = await this.browser.newPage();
                 await this.page.setViewportSize({ width: 1280, height: 720 });
+                
+                // Inicializar Executor com a página criada
+                this.executor = new ActionExecutor(this.page);
 
-                // Navegar para o sistema alvo (simulação ou real)
                 const targetUrl = process.env.HOSPITALAR_API_URL || 'https://dev.hospitalarsaude.app.br';
                 console.log(`[AGENT] Navegando para: ${targetUrl}`);
                 
                 try {
                     await this.page.goto(targetUrl, { 
                         timeout: 60000, 
-                        waitUntil: 'domcontentloaded' // Não esperar carregar tudo (imagens, analytics, etc)
+                        waitUntil: 'domcontentloaded'
                     });
                     console.log('[AGENT] Página carregada!');
                 } catch (e) {
                     console.error(`[AGENT] Erro ao carregar página (continuando): ${e}`);
                 }
 
-                // Loop de monitoramento e screenshots
                 this.startMonitoringLoop();
             }
 
         } catch (error) {
             console.error('[AGENT] Erro crítico na inicialização:', error);
             
-            // SELF-HEALING: Se falhar no modo LOCAL, tentar CLOUD (Browserbase)
             if (this.mode === 'LOCAL' && this.browserbase) {
                 console.log('🔄 ACTIVATING BROWSERBASE FALLBACK...');
                 this.mode = 'CLOUD';
-                this.isRunning = false; // Resetar flag para permitir restart
-                setTimeout(() => this.start(), 1000); // Reiniciar imediatamente em modo CLOUD
+                this.isRunning = false;
+                setTimeout(() => this.start(), 1000);
                 return;
             }
 
             this.isRunning = false;
-            // Tentar reiniciar após falha crítica (ex: crash do navegador)
             console.log('[AGENT] Tentando reiniciar em 10 segundos...');
             setTimeout(() => this.start(), 10000);
         }
@@ -103,7 +110,6 @@ export class AutonomousAgent {
         console.log('[AGENT] Iniciando sessão remota via Browserbase...');
         try {
             const session = await this.browserbase.createSession();
-            // Conectar ao navegador remoto via CDP (WebSocket)
             this.browser = await chromium.connectOverCDP(session.connectUrl);
             console.log('[AGENT] Conectado ao Browserbase com sucesso!');
         } catch (e) {
@@ -115,32 +121,29 @@ export class AutonomousAgent {
     }
 
     private async startLocalBrowser() {
-        // Iniciar Navegador Local (Railway)
         console.log('[AGENT] Iniciando Chromium Local (Railway) com Configuração Otimizada...');
         try {
             this.browser = await chromium.launch({ 
                 headless: true,
-                timeout: 120000, // 2 minutos (sugestão Claude)
+                timeout: 120000,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
-                    '--single-process', // CRÍTICO para Docker
-                    '--no-zygote',      // CRÍTICO para Docker
-                    '--js-flags=--max-old-space-size=512' // Limite de memória JS
+                    '--single-process',
+                    '--no-zygote',
+                    '--js-flags=--max-old-space-size=512'
                 ]
             });
             console.log('[AGENT] Chromium Local iniciado com sucesso!');
         } catch (error) {
             console.error('[AGENT] Falha ao iniciar Chromium Local:', error);
-            throw error; // Repassar erro para ativar o Self-Healing no catch do start()
+            throw error;
         }
     }
 
     private connectToDashboard() {
-        // Em produção, conectar ao próprio servidor local
-        // Se estiver rodando no mesmo processo/container, localhost funciona
         const wsUrl = process.env.NODE_ENV === 'production' 
             ? `ws://localhost:${process.env.PORT || 3000}`
             : this.dashboardUrl;
@@ -164,7 +167,7 @@ export class AutonomousAgent {
                 
                 if (message.type === 'command') {
                     console.log(`[AGENT] Comando recebido: ${message.command}`);
-                    await this.executeCommand(message.command);
+                    await this.processNaturalLanguageCommand(message.command);
                 }
                 
                 if (message.type === 'click_coordinate') {
@@ -179,46 +182,61 @@ export class AutonomousAgent {
 
         this.ws.on('error', (err) => {
             console.error('[AGENT] Erro de conexão WebSocket:', err.message);
-            // Tentar reconectar em 5s
             setTimeout(() => this.connectToDashboard(), 5000);
         });
     }
 
-    private async executeCommand(command: string) {
-        if (!this.page) return;
-
-        try {
-            // Comando simples: "ver [url]"
-            if (command.startsWith('ver ') || command.startsWith('navegar ')) {
-                const url = command.split(' ')[1];
-                let targetUrl = url;
-                if (!url.startsWith('http')) targetUrl = `https://${url}`;
-                
-                console.log(`[AGENT] Navegando para: ${targetUrl}`);
-                await this.page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-                
-                this.ws?.send(JSON.stringify({
-                    type: 'log',
-                    message: `Navegou para: ${targetUrl}`,
-                    level: 'success'
-                }));
-            }
-            // Outros comandos podem ser adicionados aqui (ex: "clicar", "escrever")
-            else {
-                this.ws?.send(JSON.stringify({
-                    type: 'log',
-                    message: `Comando não reconhecido: ${command}`,
-                    level: 'error'
-                }));
-            }
-        } catch (e) {
-            console.error('[AGENT] Erro na execução do comando:', e);
-            this.ws?.send(JSON.stringify({
-                type: 'log',
-                message: `Erro ao executar comando: ${e}`,
-                level: 'error'
-            }));
+    // NOVO: Processamento de Linguagem Natural e Execução de Tarefas
+    private async processNaturalLanguageCommand(command: string) {
+        if (!this.executor) {
+            this.logToDashboard('Erro: Executor não inicializado.', 'error');
+            return;
         }
+
+        // 1. Interpretar Intenção (Brain)
+        const intent = this.brain.interpret(command);
+        this.logToDashboard(`Intenção identificada: ${intent.type} (${Math.round(intent.confidence * 100)}%)`, 'info');
+
+        if (intent.type === 'UNKNOWN') {
+            this.logToDashboard('Não entendi o comando. Tente "ver google.com" ou "comprar 10 luvas".', 'warning');
+            return;
+        }
+
+        // 2. Planejar Tarefa (Orchestrator)
+        const task = this.orchestrator.planTask(intent);
+        this.logToDashboard(`Iniciando tarefa: ${task.name}`, 'info');
+
+        // 3. Executar Passos (Executor)
+        await this.executeTask(task);
+    }
+
+    private async executeTask(task: Task) {
+        if (!this.executor) return;
+
+        task.status = 'IN_PROGRESS';
+        
+        for (const step of task.steps) {
+            this.logToDashboard(`Executando: ${step.description}`, 'info');
+            
+            const success = await this.executor.executeStep(step);
+            
+            if (!success) {
+                this.logToDashboard(`Falha no passo: ${step.description}`, 'error');
+                task.status = 'FAILED';
+                return;
+            }
+        }
+
+        task.status = 'COMPLETED';
+        this.logToDashboard(`Tarefa concluída com sucesso: ${task.name}`, 'success');
+    }
+
+    private logToDashboard(message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info') {
+        this.ws?.send(JSON.stringify({
+            type: 'log',
+            message: message,
+            level: level
+        }));
     }
 
     private async executeClick(xPercent: number, yPercent: number) {
@@ -233,11 +251,7 @@ export class AutonomousAgent {
 
             await this.page.mouse.click(x, y);
             
-            this.ws?.send(JSON.stringify({
-                type: 'log',
-                message: `Clique realizado em: ${Math.round(x)}x${Math.round(y)}`,
-                level: 'info'
-            }));
+            this.logToDashboard(`Clique realizado em: ${Math.round(x)}x${Math.round(y)}`, 'info');
 
         } catch (e) {
             console.error('[AGENT] Erro ao clicar:', e);
@@ -263,18 +277,15 @@ export class AutonomousAgent {
                 let source = this.mode === 'CLOUD' ? 'Browserbase (Cloud)' : 'Railway (Local)';
 
                 if (this.page && !this.page.isClosed()) {
-                    // console.log('[AGENT] Capturando screenshot...');
                     const screenshotBuffer = await this.page.screenshot({ timeout: 5000 });
                     screenshotBase64 = screenshotBuffer.toString('base64');
-                    // console.log(`[AGENT] Screenshot capturado (${screenshotBase64.length} bytes)`);
                 } else {
                     console.error('[AGENT] Página fechada ou nula. Reiniciando navegador...');
                     this.isRunning = false;
-                    this.start(); // Tentar reiniciar
+                    this.start();
                     return;
                 }
                 
-                // Enviar para o Dashboard
                 this.ws.send(JSON.stringify({
                     type: 'screenshot',
                     image: `data:image/png;base64,${screenshotBase64}`,
@@ -284,8 +295,6 @@ export class AutonomousAgent {
 
             } catch (error) {
                 console.error('[AGENT] Erro ao capturar screenshot:', error);
-                
-                // Enviar imagem de erro para feedback visual
                 try {
                     this.ws.send(JSON.stringify({
                         type: 'log',
@@ -296,7 +305,7 @@ export class AutonomousAgent {
                     console.error('[AGENT] Falha ao enviar log de erro:', sendError);
                 }
             }
-        }, 2000); // Aumentei frequência para 2s para teste mais rápido (era 5s)
+        }, 2000);
     }
 
     public async stop() {
