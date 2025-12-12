@@ -12,6 +12,13 @@
     <!-- Header -->
     <header class="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center">
         <h1 class="text-2xl font-bold text-blue-400">🤖 The Board <span class="text-sm text-gray-400">| Sistema Multi-Agente Autônomo</span></h1>
+        <div class="flex items-center gap-3 bg-gray-900 px-4 py-2 rounded-full border border-gray-700 ml-4">
+            <span class="text-sm text-gray-400">Modo:</span>
+            <button id="mode-toggle" onclick="toggleMode()" class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none bg-gray-700">
+                <span id="mode-indicator" class="translate-x-1 inline-block w-4 h-4 transform bg-white rounded-full transition-transform"></span>
+            </button>
+            <span id="mode-label" class="text-sm font-bold text-gray-400">SIMULAÇÃO</span>
+        </div>
         <div class="flex gap-4">
             <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">● Sistema Online</span>
             <button class="bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm font-bold">PARADA DE EMERGÊNCIA</button>
@@ -48,8 +55,47 @@
             <div id="chat-log" class="flex-1 p-4 overflow-y-auto space-y-3 font-mono text-sm">
             <!-- WebSocket Script -->
             <script>
+                let isLiveMode = false;
                 const chatLog = document.getElementById('chat-log');
                 const ws = new WebSocket('ws://localhost:3002');
+
+                function toggleMode() {
+                    isLiveMode = !isLiveMode;
+                    const btn = document.getElementById('mode-toggle');
+                    const indicator = document.getElementById('mode-indicator');
+                    const label = document.getElementById('mode-label');
+
+                    if (isLiveMode) {
+                        btn.classList.remove('bg-gray-700');
+                        btn.classList.add('bg-green-600');
+                        indicator.classList.remove('translate-x-1');
+                        indicator.classList.add('translate-x-6');
+                        label.innerText = "REAL DATA";
+                        label.classList.remove('text-gray-400');
+                        label.classList.add('text-green-500');
+                        
+                        // Enviar comando para o servidor
+                        fetch('/api/mode', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ mode: 'LIVE' })
+                        });
+                    } else {
+                        btn.classList.add('bg-gray-700');
+                        btn.classList.remove('bg-green-600');
+                        indicator.classList.add('translate-x-1');
+                        indicator.classList.remove('translate-x-6');
+                        label.innerText = "SIMULAÇÃO";
+                        label.classList.add('text-gray-400');
+                        label.classList.remove('text-green-500');
+
+                        fetch('/api/mode', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ mode: 'SIMULATION' })
+                        });
+                    }
+                }
 
                 ws.onmessage = (event) => {
                     const payload = JSON.parse(event.data);

@@ -92,6 +92,17 @@ app.post('/api/settings', express.json(), (req, res) => {
   res.sendStatus(200);
 });
 
+// API: Alterar Modo (Simulação vs Real)
+app.post('/api/mode', express.json(), (req, res) => {
+  const { mode } = req.body;
+  if (orchestrator) {
+    orchestrator.setLiveMode(mode === 'LIVE');
+    res.json({ message: `Modo alterado para ${mode}` });
+  } else {
+    res.status(500).json({ error: 'Orquestrador não inicializado' });
+  }
+});
+
 // API: Atualizar Sistema (Git Pull)
 app.post('/api/update', (req, res) => {
   exec('git pull origin main', (err, stdout, stderr) => {
