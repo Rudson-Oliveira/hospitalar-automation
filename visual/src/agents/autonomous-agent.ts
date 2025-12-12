@@ -86,12 +86,13 @@ export class AutonomousAgent {
 
             try {
                 // Capturar Screenshot
-                const screenshot = await this.page.screenshot({ encoding: 'base64' });
+                const screenshotBuffer = await this.page.screenshot();
+                const screenshotBase64 = screenshotBuffer.toString('base64');
                 
                 // Enviar para o Dashboard
                 this.ws.send(JSON.stringify({
                     type: 'screenshot',
-                    image: `data:image/png;base64,${screenshot}`,
+                    image: `data:image/png;base64,${screenshotBase64}`,
                     timestamp: new Date().toISOString()
                 }));
 
