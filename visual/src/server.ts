@@ -7,6 +7,7 @@ import aiBrainInstance from './core/ai-brain';
 import taskOrchestratorInstance from './core/task-orchestrator';
 import { ActionExecutor } from './core/action-executor';
 import { UserMessage, AgentResponse, Task } from './core/types';
+import NavigateHandler from './services/navigate-handler';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -34,6 +35,7 @@ app.use(express.static(distPath, {
 let browser: Browser | null = null;
 let page: Page | null = null;
 let actionExecutor: ActionExecutor | null = null;
+let navigateHandler: NavigateHandler | null = null;
 const responseCache = new Map<string, AgentResponse>();
 const taskCache = new Map<string, Task>();
 
@@ -51,6 +53,7 @@ async function initBrowser(): Promise<void> {
     });
     page = await browser.newPage();
     actionExecutor = new ActionExecutor(page);
+    navigateHandler = new NavigateHandler(browser, page);
     console.log('[SERVER] Navegador inicializado');
   }
 }
@@ -61,10 +64,14 @@ async function initBrowser(): Promise<void> {
 async function closeBrowser(): Promise<void> {
   if (browser) {
     console.log('[SERVER] Fechando navegador...');
+    if (navigateHandler) {
+      await navigateHandler.closePage();
+    }
     await browser.close();
     browser = null;
     page = null;
     actionExecutor = null;
+    navigateHandler = null;
   }
 }
 
@@ -328,6 +335,39 @@ app.post('/browser/close', async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       error: `Erro ao fechar navegador: ${String(error)}`
+    });
+  }
+});
+
+
+/**
+ * Navegar para uma URL e capturar screenshot
+ */
+app.post('/agent/navigate', async (req: Request, res: Response) => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL nao fornecida'
+      });
+    }
+
+    // Inicializar navegador se necessario
+    if (!navigateHandler) {
+      await initBrowser();
+    }
+
+    // Navegar
+    const result = await navigateHandler!.navigate(url);
+
+    res.json(result);
+  } catch (error) {
+    console.error(`[NAVIGATE] Erro: ${error}`);
+    res.status(500).json({
+      success: false,
+      error: `Erro ao navegar: ${String(error)}`
     });
   }
 });

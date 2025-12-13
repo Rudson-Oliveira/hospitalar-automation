@@ -25,6 +25,14 @@ async function sendMessage() {
     addMessage(text, 'user');
     userInput.value = '';
 
+    // Detectar e processar comando de navegação
+    if (window.navigationManager) {
+        const isNavigation = await window.navigationManager.processMessage(text);
+        if (isNavigation) {
+            return; // Comando de navegação foi processado
+        }
+    }
+
     // Feedback visual de carregando
     const loadingId = 'loading-' + Date.now();
     const loadingDiv = document.createElement('div');
