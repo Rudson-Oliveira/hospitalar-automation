@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agente Hospitalar - Controle de Rotina</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="icon">🏥</span>
+                <h1>Agente Hospitalar</h1>
+            </div>
+            <div class="status-badge">
+                <span class="dot"></span>
+                <span id="connection-status">Conectado</span>
+            </div>
+        </header>
+
+        <main class="chat-container">
+            <div class="messages" id="messages-area">
+                <div class="message bot">
+                    <div class="avatar">🤖</div>
+                    <div class="content">
+                        <p>Olá! Sou seu assistente pessoal. Posso ajudar a gerenciar sua rotina no Obsidian.</p>
+                        <p>Tente dizer: <strong>"Criar rotina"</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Digite seu comando..." autocomplete="off">
+                <button id="send-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
