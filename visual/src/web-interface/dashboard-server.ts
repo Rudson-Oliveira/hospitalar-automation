@@ -17,28 +17,35 @@ const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 3002;
 
-// Servir arquivos estáticos (HTML do Dashboard)
-// Agora os arquivos são copiados para dist/web-interface no build
-const staticPath = path.join(__dirname, '.');
+// Resolução robusta de caminhos estáticos
+// Tenta encontrar onde estão os arquivos HTML (pode variar entre dev/ts-node e prod/build)
+let staticPath = path.join(__dirname, '.');
+if (!fs.existsSync(path.join(staticPath, 'dashboard.html'))) {
+    // Tentar subir um nível se estiver dentro de dist/
+    staticPath = path.join(__dirname, '../web-interface');
+}
+if (!fs.existsSync(path.join(staticPath, 'dashboard.html'))) {
+    // Fallback para raiz do projeto visual/src/web-interface
+    staticPath = path.join(process.cwd(), 'src/web-interface');
+}
+
+console.log(`[SERVER] Servindo arquivos estáticos de: ${staticPath}`);
 app.use(express.static(staticPath));
 
 // Instância do Board
 const board = new BoardOrchestrator();
 
 // Iniciar Agente Autônomo e Self-Healing
-// Aguarda um pouco para garantir que o servidor WS esteja de pé
 setTimeout(() => {
   const autonomousAgent = new AutonomousAgent(`ws://localhost:${PORT}`);
   const healer = new SelfHealingOrchestrator(autonomousAgent);
   
-  // Iniciar monitoramento
   healer.startMonitoring();
   autonomousAgent.start().catch(err => {
     console.error(err);
     healer.reportFailure(err);
   });
 
-  // Expor para debug/controle manual se necessário
   (global as any).agent = autonomousAgent;
   (global as any).healer = healer;
 }, 5000);
@@ -47,20 +54,16 @@ setTimeout(() => {
 wss.on('connection', (ws) => {
   console.log('Cliente conectado ao Dashboard');
 
-  // Enviar estado inicial
   ws.send(JSON.stringify({
     type: 'HISTORY',
     data: board.getHistory()
   }));
 
-  // Lidar com mensagens recebidas (Broadcast)
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message.toString());
       
-      // Se for screenshot ou log do agente, fazer broadcast para todos os clientes (Dashboards)
       if (data.type === 'screenshot' || data.type === 'log' || data.type === 'AGENT_CONNECT') {
-        // Log de debug para confirmar recebimento (apenas para logs e connect, screenshot polui muito)
         if (data.type !== 'screenshot') {
             console.log(`[BROADCAST] Recebido do Agente: ${data.type} - Retransmitindo...`);
         }
@@ -72,10 +75,8 @@ wss.on('connection', (ws) => {
         });
       }
       
-      // Se for comando do Dashboard, enviar para o Agente (implementação simplificada de broadcast reverso)
       if (data.type === 'command' || data.type === 'click_coordinate') {
          console.log(`[COMMAND] Recebido do Dashboard: ${data.type} - Retransmitindo para Agente...`);
-         // Broadcast para garantir que o agente receba
          wss.clients.forEach((client) => {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
               client.send(message.toString());
@@ -88,17 +89,15 @@ wss.on('connection', (ws) => {
     }
   });
 
-  // Simulação de eventos em tempo real para demonstração (MANTIDO, mas reduzido frequência)
+  // Simulação reduzida
   const interval = setInterval(async () => {
-    if (Math.random() > 0.9) { // Reduzido para não poluir tanto
+    if (Math.random() > 0.95) { 
       const agents = Object.values(AGENTS);
       const randomAgent = agents[Math.floor(Math.random() * agents.length)];
       const messages = [
         "Monitorando KPIs...",
-        "Analisando tráfego de rede...",
-        "Verificando novas vendas...",
-        "Calculando ROI da campanha...",
-        "Nenhuma anomalia detectada."
+        "Analisando tráfego...",
+        "Sistema estável."
       ];
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
       
@@ -113,7 +112,7 @@ wss.on('connection', (ws) => {
         data: msgObj
       }));
     }
-  }, 10000);
+  }, 15000);
 
   ws.on('close', () => {
     clearInterval(interval);
@@ -121,7 +120,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-// API: Ler Configurações (Protegido)
+// API Routes
 app.get('/api/settings', authMiddleware, requireAdmin, (req, res) => {
   const envPath = path.join(__dirname, '../../.env');
   if (fs.existsSync(envPath)) {
@@ -132,22 +131,17 @@ app.get('/api/settings', authMiddleware, requireAdmin, (req, res) => {
   }
 });
 
-// API: Salvar Configurações (Protegido)
 app.post('/api/settings', authMiddleware, requireAdmin, express.json(), (req, res) => {
   const envPath = path.join(__dirname, '../../.env');
   const newConfig = req.body;
-  
   let envContent = '';
   for (const [key, value] of Object.entries(newConfig)) {
     envContent += `${key}=${value}\n`;
   }
-
   fs.writeFileSync(envPath, envContent);
-  console.log('Configurações atualizadas via Painel Web');
   res.sendStatus(200);
 });
 
-// API: Alterar Modo (Simulação vs Real)
 app.post('/api/mode', express.json(), (req, res) => {
   const { mode } = req.body;
   if (board) {
@@ -158,74 +152,49 @@ app.post('/api/mode', express.json(), (req, res) => {
   }
 });
 
-// API: Atualizar Sistema (Git Pull)
 app.post('/api/update', (req, res) => {
   exec('git pull origin main', (err, stdout, stderr) => {
     if (err) {
-      console.error(err);
       return res.status(500).json({ error: 'Falha na atualização', details: stderr });
     }
-    console.log(stdout);
     res.json({ message: 'Sistema atualizado com sucesso!', output: stdout });
   });
 });
 
-// API: Chaos Testing (Simular Falha)
 app.post('/api/chaos/crash', (req, res) => {
   const agent = (global as any).agent;
   const healer = (global as any).healer;
-
   if (agent && healer) {
-    console.warn('[CHAOS] 💥 Simulando falha crítica no agente...');
-    // Forçar erro reportado ao healer
     healer.reportFailure(new Error('Simulação de Crash Manual (Chaos Testing)'));
-    res.json({ message: 'Falha simulada com sucesso! Verifique os logs para ver o Self-Healing em ação.' });
+    res.json({ message: 'Falha simulada com sucesso!' });
   } else {
     res.status(500).json({ error: 'Agente ou Healer não inicializados.' });
   }
 });
 
-// Health Check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString()
-  });
+  res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-// Rota principal
-app.get('/', (req, res) => {
-  res.sendFile(path.join(staticPath, 'dashboard.html'));
-});
+// Rotas de Arquivos Estáticos com Fallback Seguro
+const serveFile = (filename: string, res: express.Response) => {
+    const filePath = path.join(staticPath, filename);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.error(`[404] Arquivo não encontrado: ${filePath}`);
+        res.status(404).send(`Arquivo ${filename} não encontrado no servidor.`);
+    }
+};
 
-app.get('/copilot', (req, res) => {
-  res.sendFile(path.join(staticPath, 'copilot-sidebar.html'));
-});
-
-app.get('/autonomy', (req, res) => {
-  res.sendFile(path.join(staticPath, 'autonomy-dashboard.html'));
-});
-
-app.get('/settings', (req, res) => {
-  res.sendFile(path.join(staticPath, 'settings.html'));
-});
-
-app.get('/virtual-assistant.html', (req, res) => {
-  res.sendFile(path.join(staticPath, 'virtual-assistant.html'));
-});
-
-app.get('/onboarding', (req, res) => {
-  res.sendFile(path.join(staticPath, 'onboarding-wizard.html'));
-});
-
-app.get('/nav-menu.js', (req, res) => {
-  res.sendFile(path.join(staticPath, 'nav-menu.js'));
-});
+app.get('/', (req, res) => serveFile('dashboard.html', res));
+app.get('/copilot', (req, res) => serveFile('copilot-sidebar.html', res));
+app.get('/autonomy', (req, res) => serveFile('autonomy-dashboard.html', res));
+app.get('/settings', (req, res) => serveFile('settings.html', res));
+app.get('/virtual-assistant.html', (req, res) => serveFile('virtual-assistant.html', res));
+app.get('/onboarding', (req, res) => serveFile('onboarding-wizard.html', res));
+app.get('/nav-menu.js', (req, res) => serveFile('nav-menu.js', res));
 
 server.listen(PORT, () => {
   console.log(`🚀 Dashboard Server rodando em http://localhost:${PORT}`);
-  console.log(`   - CEO Dashboard: http://localhost:${PORT}/`);
-  console.log(`   - Copilot Sidebar: http://localhost:${PORT}/copilot`);
-  console.log(`   - Autonomy Metrics: http://localhost:${PORT}/autonomy`);
 });
