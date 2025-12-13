@@ -1,4 +1,5 @@
 # Usar imagem oficial do Playwright (versão exata para evitar conflitos)
+# Force rebuild - Deploy corrigido para Hospitalar Automation
 FROM mcr.microsoft.com/playwright:v1.57.0-noble
 
 # Definir diretório de trabalho
