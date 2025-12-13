@@ -126,3 +126,188 @@ export async function interpretScreen(page: Page): Promise<ScreenAnalysis> {
         interactiveElements: [] // Poderia ser preenchido com análise mais profunda do DOM
     };
 }
+
+/**
+ * Toma decisão baseado na interpretação da tela
+ */
+export async function makeDecision(page: Page, analysis: ScreenAnalysis): Promise<string> {
+    console.log(`[AUTÔNOMO] Analisando situação...`);
+
+    if (analysis.hasErrors) {
+        console.log(`[AUTÔNOMO] 🚨 Erro detectado na tela`);
+        return 'handle_error';
+    }
+
+    if (analysis.hasSuccess) {
+        console.log(`[AUTÔNOMO] ✅ Sucesso detectado`);
+        return 'continue';
+    }
+
+    if (analysis.hasForms) {
+        console.log(`[AUTÔNOMO] 📝 Formulário detectado`);
+        return 'fill_form';
+    }
+
+    if (analysis.hasButtons) {
+        console.log(`[AUTÔNOMO] 🔘 Botões detectados`);
+        return 'click_button';
+    }
+
+    console.log(`[AUTÔNOMO] ❓ Situação desconhecida`);
+    return 'unknown';
+}
+
+/**
+ * Executa fluxo autônomo completo com múltiplas ações
+ */
+export async function executeAutonomousFlow(
+    page: Page,
+    actions: Array<{
+        type: 'click' | 'type' | 'wait';
+        target?: string;
+        value?: string;
+        delay?: number;
+    }>
+): Promise<AutonomousResult[]> {
+    console.log(`[AUTÔNOMO] Iniciando fluxo autônomo com ${actions.length} ações`);
+
+    const results: AutonomousResult[] = [];
+
+    for (let i = 0; i < actions.length; i++) {
+        const action = actions[i];
+        console.log(`[AUTÔNOMO] Ação ${i + 1}/${actions.length}: ${action.type}`);
+
+        let result: AutonomousResult;
+
+        switch (action.type) {
+            case 'click':
+                result = await autonomousClick(page, action.target!);
+                break;
+
+            case 'type':
+                result = await autonomousType(page, action.target!, action.value!);
+                break;
+
+            case 'wait':
+                await page.waitForTimeout(action.delay || 1000);
+                result = {
+                    success: true,
+                    message: `Aguardado ${action.delay || 1000}ms`,
+                };
+                break;
+
+            default:
+                result = {
+                    success: false,
+                    message: 'Ação desconhecida',
+                };
+        }
+
+        results.push(result);
+
+        if (!result.success) {
+            console.error(`[AUTÔNOMO] ❌ Ação ${i + 1} falhou. Parando fluxo.`);
+            break;
+        }
+    }
+
+    console.log(`[AUTÔNOMO] ✅ Fluxo concluído: ${results.filter(r => r.success).length}/${results.length} ações bem-sucedidas`);
+
+    return results;
+}
+
+/**
+ * Monitora a tela continuamente e executa ações baseado em mudanças
+ */
+export async function monitorAndAct(
+    page: Page,
+    duration: number = 60000,
+    onStateChange?: (analysis: ScreenAnalysis) => Promise<void>
+): Promise<void> {
+    console.log(`[AUTÔNOMO] Iniciando monitoramento por ${duration}ms`);
+
+    const startTime = Date.now();
+    let lastAnalysis: ScreenAnalysis | null = null;
+
+    while (Date.now() - startTime < duration) {
+        const analysis = await interpretScreen(page);
+
+        // Detecta mudanças
+        if (!lastAnalysis || JSON.stringify(analysis) !== JSON.stringify(lastAnalysis)) {
+            console.log(`[AUTÔNOMO] 🔄 Mudança detectada na tela`);
+
+            if (onStateChange) {
+                await onStateChange(analysis);
+            }
+
+            lastAnalysis = analysis;
+        }
+
+        // Aguarda antes da próxima verificação
+        await page.waitForTimeout(2000);
+    }
+
+    console.log(`[AUTÔNOMO] ✅ Monitoramento finalizado`);
+}
+
+/**
+ * Preenche um formulário inteiro de forma autônoma
+ */
+export async function fillFormAutonomously(
+    page: Page,
+    formData: Record<string, string>
+): Promise<AutonomousResult[]> {
+    console.log(`[AUTÔNOMO] Preenchendo formulário com ${Object.keys(formData).length} campos`);
+
+    const results: AutonomousResult[] = [];
+
+    for (const [fieldName, fieldValue] of Object.entries(formData)) {
+        console.log(`[AUTÔNOMO] Preenchendo campo: ${fieldName}`);
+        const result = await autonomousType(page, fieldName, fieldValue);
+        results.push(result);
+
+        if (!result.success) {
+            console.warn(`[AUTÔNOMO] ⚠️ Falha ao preencher ${fieldName}`);
+        }
+
+        // Pequeno delay entre campos
+        await page.waitForTimeout(300);
+    }
+
+    return results;
+}
+
+/**
+ * Extrai dados de uma tabela de forma autônoma
+ */
+export async function extractTableDataAutonomously(
+    page: Page,
+    tableSelector: string = 'table'
+): Promise<Record<string, string>[]> {
+    console.log(`[AUTÔNOMO] Extraindo dados da tabela`);
+
+    try {
+        const data = await page.evaluate((selector) => {
+            const table = document.querySelector(selector);
+            if (!table) return [];
+
+            const rows = Array.from(table.querySelectorAll('tr'));
+            const headers = Array.from(rows[0]?.querySelectorAll('th, td') || []).map(th => th.textContent?.trim() || '');
+
+            return rows.slice(1).map(row => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                const obj: Record<string, string> = {};
+                headers.forEach((header, index) => {
+                    obj[header] = cells[index]?.textContent?.trim() || '';
+                });
+                return obj;
+            });
+        }, tableSelector);
+
+        console.log(`[AUTÔNOMO] ✅ ${data.length} linhas extraídas`);
+        return data;
+    } catch (error) {
+        console.error(`[AUTÔNOMO] ❌ Erro ao extrair tabela: ${error}`);
+        return [];
+    }
+}
