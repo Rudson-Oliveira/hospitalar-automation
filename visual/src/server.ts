@@ -2,10 +2,10 @@ import express, { Request, Response } from 'express';
 import { chromium, Browser, Page } from 'playwright';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import aiBrainInstance from './core/ai-brain.js';
-import taskOrchestratorInstance from './core/task-orchestrator.js';
-import { ActionExecutor } from './core/action-executor.js';
-import { UserMessage, AgentResponse, Task } from './core/types.js';
+import aiBrainInstance from './core/ai-brain';
+import taskOrchestratorInstance from './core/task-orchestrator';
+import { ActionExecutor } from './core/action-executor';
+import { UserMessage, AgentResponse, Task } from './core/types';
 
 // Carregar variáveis de ambiente
 dotenv.config();

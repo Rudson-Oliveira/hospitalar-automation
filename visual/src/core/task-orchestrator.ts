@@ -1,4 +1,4 @@
-import { Intent, Task, ActionStep, IntentType } from './types.js';
+import { Intent, Task, ActionStep, IntentType } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 class TaskOrchestrator {

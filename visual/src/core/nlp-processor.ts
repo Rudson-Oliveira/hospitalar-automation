@@ -1,4 +1,4 @@
-import { NLPResult, Entity, Intent, IntentType } from './types.js';
+import { NLPResult, Entity, Intent, IntentType } from './types';
 
 class NLPProcessor {
   private model: string;

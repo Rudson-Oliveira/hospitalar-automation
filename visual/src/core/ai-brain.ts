@@ -1,5 +1,5 @@
-import { Intent, IntentType, AIContext, NLPResult } from './types.js';
-import { NLPProcessor } from './nlp-processor.js';
+import { Intent, IntentType, AIContext, NLPResult } from './types';
+import { NLPProcessor } from './nlp-processor';
 import { v4 as uuidv4 } from 'uuid';
 
 class AIBrain {
