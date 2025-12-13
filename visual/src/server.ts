@@ -19,7 +19,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Servir arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, '../dist')));
+const distPath = path.join(__dirname, '../dist');
+console.log(`[SERVER] Servindo arquivos estáticos de: ${distPath}`);
+app.use(express.static(distPath));
 
 // Variáveis globais
 let browser: Browser | null = null;
@@ -327,7 +329,9 @@ app.post('/browser/close', async (req: Request, res: Response) => {
  * Tratamento de erro 404 - Redirecionar para o frontend (SPA)
  */
 app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  console.log(`[SERVER] Redirecionando para index.html: ${indexPath}`);
+  res.sendFile(indexPath);
 });
 
 /**
