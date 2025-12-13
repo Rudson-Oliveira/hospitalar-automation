@@ -20,6 +20,7 @@ COPY . .
 
 # Build do projeto (compilar TS e copiar assets)
 RUN npm run build
+RUN cp -r client-build/* dist/ 2>/dev/null || echo 'No client-build found, skipping frontend copy'
 
 # Expor porta do servidor
 EXPOSE 3000
