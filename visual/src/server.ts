@@ -7,7 +7,7 @@ import aiBrainInstance from './core/ai-brain';
 import taskOrchestratorInstance from './core/task-orchestrator';
 import { ActionExecutor } from './core/action-executor';
 import { UserMessage, AgentResponse, Task } from './core/types';
-import NavigateHandler from './services/navigate-handler';
+import { NavigateHandler } from './handlers/navigate-handler';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -53,7 +53,7 @@ async function initBrowser(): Promise<void> {
     });
     page = await browser.newPage();
     actionExecutor = new ActionExecutor(page);
-    navigateHandler = new NavigateHandler(browser, page);
+    navigateHandler = new NavigateHandler(page, browser);
     console.log('[SERVER] Navegador inicializado');
   }
 }
