@@ -17,7 +17,8 @@
     "sim:full": "ts-node src/agents/full_simulation.ts",
     "sim:twin": "ts-node src/agents/twin_simulation.ts",
     "sim:hierarchy": "ts-node src/agents/hierarchy_simulation.ts",
-    "dashboard": "ts-node src/web-interface/dashboard-server.ts"
+    "dashboard": "ts-node src/web-interface/dashboard-server.ts",
+    "obsidian": "ts-node src/agents/obsidian-desktop.ts"
   },
   "keywords": [
     "automation",
