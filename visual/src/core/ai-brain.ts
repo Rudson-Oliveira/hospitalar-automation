@@ -2,7 +2,7 @@ import { Intent, IntentType, AIContext, NLPResult } from './types.js';
 import { NLPProcessor } from './nlp-processor.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export class AIBrain {
+class AIBrain {
   private nlpProcessor: NLPProcessor;
   private context: AIContext;
   private conversationHistory: Array<{ role: string; content: string }> = [];
@@ -298,4 +298,6 @@ Seja conciso mas informativo. Sempre confirme as ações que vai executar.`;
   }
 }
 
-export default new AIBrain();
+const aiBrainInstance = new AIBrain();
+export { AIBrain };
+export default aiBrainInstance;

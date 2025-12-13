@@ -23,7 +23,7 @@ export class BrowserbaseClient {
                 }
             });
 
-            const { id, connectUrl } = response.data;
+            const { id, connectUrl } = response.data as { id: string; connectUrl: string };
             console.log(`[BROWSERBASE] Sessão criada: ${id}`);
             return { id, connectUrl };
 

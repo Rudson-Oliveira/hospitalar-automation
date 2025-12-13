@@ -1,7 +1,7 @@
 import { Intent, Task, ActionStep, IntentType } from './types.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export class TaskOrchestrator {
+class TaskOrchestrator {
 
   /**
    * Planeja uma tarefa baseada na intenção
@@ -339,4 +339,6 @@ export class TaskOrchestrator {
   }
 }
 
-export default new TaskOrchestrator();
+const taskOrchestratorInstance = new TaskOrchestrator();
+export { TaskOrchestrator };
+export default taskOrchestratorInstance;

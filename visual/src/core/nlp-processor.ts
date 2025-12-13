@@ -1,6 +1,6 @@
 import { NLPResult, Entity, Intent, IntentType } from './types.js';
 
-export class NLPProcessor {
+class NLPProcessor {
   private model: string;
   private useOpenAI: boolean;
 
@@ -179,7 +179,8 @@ Seja preciso na extração de entidades e sempre retorne um JSON válido.`;
    * Valida se a mensagem é compreensível
    */
   isValidMessage(message: string): boolean {
-    return message && message.trim().length > 0 && message.length < 5000;
+    const isValid = message && message.trim().length > 0 && message.length < 5000;
+    return !!isValid;
   }
 
   /**
@@ -211,4 +212,6 @@ Seja preciso na extração de entidades e sempre retorne um JSON válido.`;
   }
 }
 
-export default new NLPProcessor();
+const nlpProcessorInstance = new NLPProcessor();
+export { NLPProcessor };
+export default nlpProcessorInstance;

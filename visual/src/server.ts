@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import { chromium, Browser, Page } from 'playwright';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import AIBrain from './core/ai-brain.js';
-import TaskOrchestrator from './core/task-orchestrator.js';
+import aiBrainInstance from './core/ai-brain.js';
+import taskOrchestratorInstance from './core/task-orchestrator.js';
 import { ActionExecutor } from './core/action-executor.js';
 import { UserMessage, AgentResponse, Task } from './core/types.js';
 
@@ -68,7 +68,6 @@ app.get('/health', (req: Request, res: Response) => {
  * Informações do agente
  */
 app.get('/agent/info', (req: Request, res: Response) => {
-  const aiBrain = new AIBrain();
   res.json({
     name: 'Comet',
     version: '2.0.0',
@@ -102,15 +101,13 @@ app.post('/agent/message', async (req: Request, res: Response) => {
     console.log(`[API] Recebida mensagem: ${content}`);
 
     const messageId = uuidv4();
-    const aiBrain = new AIBrain();
-    const orchestrator = new TaskOrchestrator();
 
     // 1. Interpretar mensagem
-    const intent = await aiBrain.interpret(content);
+    const intent = await aiBrainInstance.interpret(content);
     console.log(`[API] Intenção detectada: ${intent.type} (${intent.confidence})`);
 
     // 2. Planejar tarefa
-    const task = orchestrator.planTask(intent);
+    const task = taskOrchestratorInstance.planTask(intent);
     taskCache.set(task.id, task);
 
     // 3. Executar tarefa
@@ -194,8 +191,7 @@ app.get('/agent/task/:id', (req: Request, res: Response) => {
  * Histórico de conversa
  */
 app.get('/agent/history', (req: Request, res: Response) => {
-  const aiBrain = new AIBrain();
-  const history = aiBrain.getConversationHistory();
+  const history = aiBrainInstance.getConversationHistory();
   res.json({
     messages: history,
     count: history.length
@@ -206,8 +202,7 @@ app.get('/agent/history', (req: Request, res: Response) => {
  * Limpar histórico
  */
 app.post('/agent/history/clear', (req: Request, res: Response) => {
-  const aiBrain = new AIBrain();
-  aiBrain.clearConversationHistory();
+  aiBrainInstance.clearConversationHistory();
   res.json({
     success: true,
     message: 'Histórico limpo com sucesso'
@@ -277,33 +272,18 @@ app.post('/agent/tests/:id/run', async (req: Request, res: Response) => {
 
     console.log(`[TEST] Executando teste ${id}: ${command}`);
 
-    // Reutilizar endpoint de mensagem
-    const mockReq = {
-      body: {
-        content: command,
-        userId: `test-${id}`
-      }
-    } as any;
+    const messageId = uuidv4();
 
-    const responses: any[] = [];
-    const mockRes = {
-      json: (data: any) => {
-        responses.push(data);
-      },
-      status: (code: number) => ({
-        json: (data: any) => {
-          responses.push({ statusCode: code, ...data });
-        }
-      })
-    } as any;
-
-    await (app._router.stack.find((r: any) => r.route?.path === '/agent/message')?.route?.stack[1]?.handle || (() => {}))(mockReq, mockRes);
+    // Interpretar e executar
+    const intent = await aiBrainInstance.interpret(command);
+    const task = taskOrchestratorInstance.planTask(intent);
 
     res.json({
       success: true,
       testId: id,
       command,
-      response: responses[0]
+      intent,
+      task
     });
   } catch (error) {
     console.error(`[TEST] Erro ao executar teste: ${error}`);

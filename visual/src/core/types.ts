@@ -23,7 +23,7 @@ export interface Entity {
 
 export interface ActionStep {
   id: string;
-  type: 'CLICK' | 'TYPE' | 'NAVIGATE' | 'WAIT' | 'READ' | 'SELECT' | 'SCREENSHOT' | 'EXECUTE_SCRIPT';
+  type: 'CLICK' | 'TYPE' | 'NAVIGATE' | 'WAIT' | 'READ' | 'SELECT' | 'SCREENSHOT' | 'EXECUTE_SCRIPT' | 'EXTRACT_DATA';
   selector?: string;
   value?: string;
   description: string;

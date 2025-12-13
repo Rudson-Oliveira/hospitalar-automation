@@ -194,7 +194,7 @@ export class AutonomousAgent {
         }
 
         // 1. Interpretar Intenção (Brain)
-        const intent = this.brain.interpret(command);
+        const intent = await this.brain.interpret(command);
         this.logToDashboard(`Intenção identificada: ${intent.type} (${Math.round(intent.confidence * 100)}%)`, 'info');
 
         if (intent.type === 'UNKNOWN') {
