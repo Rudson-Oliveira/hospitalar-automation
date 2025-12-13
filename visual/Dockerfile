@@ -20,8 +20,8 @@ RUN npm install
 COPY . .
 
 # Build do projeto (compilar TS e copiar assets)
-RUN npm run build || echo 'Build failed, but continuing with frontend copy'RUN cp -r client-build/* dist/ 2>/dev/null || echo 'No client-build found, skipping frontend copy'
-
+RUN npm run build || echo 'Build failed, but continuing'
+RUN cp -r client-build/* dist/ 2>/dev/null || echo 'No frontend found'
 # Expor porta do servidor
 EXPOSE 3000
 
