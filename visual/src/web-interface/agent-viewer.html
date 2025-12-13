@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMET - Agente Autônomo em Ação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0;
+            height: 80vh;
+        }
+
+        /* Left Panel - Chat */
+        .chat-panel {
+            background: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.agent {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.agent .message-content {
+            background: #2d2d44;
+            color: #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system .message-content {
+            background: #764ba2;
+            color: white;
+            text-align: center;
+            width: 100%;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        #commandInput {
+            flex: 1;
+            background: #2d2d44;
+            border: 1px solid #667eea;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #commandInput:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(118, 75, 162, 0.3);
+        }
+
+        #sendBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: scale(1.05);
+        }
+
+        #sendBtn:active {
+            transform: scale(0.95);
+        }
+
+        /* Right Panel - Screen */
+        .screen-panel {
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen-header {
+            background: #1a1a2e;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #667eea;
+        }
+
+        .status-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .screen-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #screenImage {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+
+        .cursor-overlay {
+            position: absolute;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .cursor-pointer {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.2);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            animation: cursorGlow 1s infinite;
+        }
+
+        @keyframes cursorGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+            }
+        }
+
+        .action-log {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #10b981;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            border: 1px solid #10b981;
+        }
+
+        .action-log-item {
+            margin: 4px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .action-log-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .chat-panel {
+                height: 400px;
+            }
+
+            .screen-panel {
+                height: 400px;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin-left: 5px;
+            animation: blink 1.4s infinite;
+        }
+
+        @keyframes blink {
+            0%, 20%, 50%, 80%, 100% {
+                opacity: 1;
+            }
+            40% {
+                opacity: 0.2;
+            }
+            60% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Chat Panel -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h1>🤖 COMET</h1>
+                <p>Agente Autônomo Hospitalar</p>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="message system">
+                    <div class="message-content">
+                        👋 Olá! Sou o COMET. Digite um comando e veja-me executar em tempo real!
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <input
+                        type="text"
+                        id="commandInput"
+                        placeholder="Ex: Crie um pedido para 10 luvas cirúrgicas..."
+                        autocomplete="off"
+                    />
+                    <button id="sendBtn">Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen Panel -->
+        <div class="screen-panel">
+            <div class="screen-header">
+                <div class="status-info">
+                    <div class="status-dot"></div>
+                    <span>Transmissão ao vivo</span>
+                </div>
+                <div class="status-info">
+                    <span id="fps">FPS: 0</span>
+                    <span id="resolution">-</span>
+                </div>
+            </div>
+
+            <div class="screen-content">
+                <img id="screenImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23333' width='400' height='300'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23666' font-size='20'%3EAguardando conexão...%3C/text%3E%3C/svg%3E" alt="Tela do Agente" />
+                <div class="cursor-overlay" id="cursorOverlay" style="display: none;">
+                    <div class="cursor-pointer"></div>
+                </div>
+                <div class="action-log" id="actionLog" style="display: none;">
+                    <div id="actionLogContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let frameCount = 0;
+        let lastFpsUpdate = Date.now();
+
+        // Elementos do DOM
+        const messagesDiv = document.getElementById('messages');
+        const commandInput = document.getElementById('commandInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const screenImage = document.getElementById('screenImage');
+        const cursorOverlay = document.getElementById('cursorOverlay');
+        const actionLog = document.getElementById('actionLog');
+        const actionLogContent = document.getElementById('actionLogContent');
+
+        // Enviar comando
+        function sendCommand() {
+            const command = commandInput.value.trim();
+            if (!command) return;
+
+            // Adicionar mensagem do usuário
+            addMessage(command, 'user');
+            commandInput.value = '';
+
+            // Enviar para o agente
+            fetch(`${API_BASE}/agent/message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: command })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    addMessage('✅ Tarefa iniciada...', 'system');
+                    // Aqui o streaming de tela já deve estar ativo
+                } else {
+                    addMessage(`❌ Erro: ${data.error}`, 'system');
+                }
+            })
+            .catch(err => {
+                addMessage(`❌ Erro: ${err.message}`, 'system');
+            });
+        }
+
+        // Adicionar mensagem ao chat
+        function addMessage(text, type = 'agent') {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Conectar a WebSocket para streaming de tela
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/agent/stream`);
+
+            ws.onopen = () => {
+                addMessage('📡 Conectado ao agente!', 'system');
+                console.log('WebSocket conectado');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    // Atualizar screenshot
+                    if (data.screenshot) {
+                        screenImage.src = data.screenshot;
+                        frameCount++;
+
+                        // Atualizar FPS
+                        const now = Date.now();
+                        if (now - lastFpsUpdate >= 1000) {
+                            document.getElementById('fps').textContent = `FPS: ${frameCount}`;
+                            frameCount = 0;
+                            lastFpsUpdate = now;
+                        }
+                    }
+
+                    // Atualizar cursor
+                    if (data.cursor && data.cursor.visible) {
+                        const rect = screenImage.getBoundingClientRect();
+                        const x = (data.cursor.x / 1920) * rect.width; // Assumir resolução 1920x1080
+                        const y = (data.cursor.y / 1080) * rect.height;
+
+                        cursorOverlay.style.left = (rect.left + x - 12) + 'px';
+                        cursorOverlay.style.top = (rect.top + y - 12) + 'px';
+                        cursorOverlay.style.display = 'block';
+                    } else {
+                        cursorOverlay.style.display = 'none';
+                    }
+
+                    // Atualizar log de ações
+                    if (data.action) {
+                        const item = document.createElement('div');
+                        item.className = 'action-log-item';
+                        item.textContent = `→ ${data.action}`;
+                        actionLogContent.insertBefore(item, actionLogContent.firstChild);
+
+                        // Manter apenas últimas 5 ações
+                        while (actionLogContent.children.length > 5) {
+                            actionLogContent.removeChild(actionLogContent.lastChild);
+                        }
+
+                        actionLog.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar mensagem WebSocket:', error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('Erro WebSocket:', error);
+                addMessage('❌ Erro de conexão', 'system');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket desconectado');
+                setTimeout(connectWebSocket, 3000); // Reconectar após 3 segundos
+            };
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendCommand);
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+
+        // Inicializar
+        connectWebSocket();
+    </script>
+</body>
+</html>
