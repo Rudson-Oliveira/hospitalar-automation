@@ -15,6 +15,9 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
+// Fila de comandos para Polling
+const commandQueue: any[] = [];
+
 const PORT = process.env.PORT || 5001;
 
 // Resolução robusta de caminhos estáticos
@@ -174,6 +177,85 @@ app.post('/api/chaos/crash', (req, res) => {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.post('/agent/command', express.json(), (req, res) => {
+  const { message } = req.body;
+  
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  console.log(`[API] Comando recebido via API: ${message}`);
+
+  // 1. Broadcast via WebSocket (para clientes conectados)
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: 'command',
+        content: message
+      }));
+    }
+  });
+
+  // 2. Adicionar à fila para Polling (para agentes HTTP)
+  commandQueue.push({
+    type: 'command',
+    content: message,
+    timestamp: new Date()
+  });
+
+  // Limpar fila antiga se crescer muito
+  if (commandQueue.length > 50) commandQueue.shift();
+
+  res.json({ status: 'sent', message: 'Comando enviado para o agente' });
+});
+
+// Endpoint de Polling para Agentes HTTP
+app.get('/api/agent/poll', (req, res) => {
+  // Retorna todos os comandos pendentes e limpa a fila (simples)
+  // Em produção idealmente usaria ID do agente para filtrar
+  const commands = [...commandQueue];
+  commandQueue.length = 0; // Limpar fila após entrega
+  res.json({ commands });
+});
+
+// Endpoint para ler arquivo de rotina
+app.post('/file/read-routine', express.json(), (req, res) => {
+  const { date } = req.body; // Espera formato YYYY-MM-DD
+  const vaultPath = process.env.OBSIDIAN_VAULT_PATH || path.join(process.cwd(), 'ObsidianVault');
+  const filename = `Daily-Routine-${date || new Date().toISOString().split('T')[0]}.md`;
+  const filePath = path.join(vaultPath, filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.json({ exists: false, tasks: [] });
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const tasks = [];
+    const lines = content.split('\n');
+    
+    // Regex para capturar checkboxes: - [ ] ou - [x] seguido do texto
+    // Exemplo: - [ ] 08:00 - Acordar
+    const taskRegex = /^- \[([ x])\] (?:(\d{2}:\d{2}) - )?(.+)$/;
+
+    for (const line of lines) {
+      const match = line.match(taskRegex);
+      if (match) {
+        tasks.push({
+          completed: match[1] === 'x',
+          time: match[2] || '',
+          text: match[3].trim()
+        });
+      }
+    }
+
+    res.json({ exists: true, tasks });
+  } catch (error) {
+    console.error(`Erro ao ler arquivo de rotina: ${error}`);
+    res.status(500).json({ error: 'Falha ao ler arquivo de rotina' });
+  }
 });
 
 // Rotas de Arquivos Estáticos com Fallback Seguro
