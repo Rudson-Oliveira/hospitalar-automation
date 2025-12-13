@@ -21,7 +21,14 @@ app.use(express.urlencoded({ extended: true }));
 // Servir arquivos estáticos do frontend
 const distPath = path.join(__dirname, '../dist');
 console.log(`[SERVER] Servindo arquivos estáticos de: ${distPath}`);
-app.use(express.static(distPath));
+// Forçar cache-control para evitar cache de arquivos antigos
+app.use(express.static(distPath, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // Variáveis globais
 let browser: Browser | null = null;
