@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import path from 'path';
 import { chromium, Browser, Page } from 'playwright';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,12 +18,18 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, '../dist')));
+
 // Variáveis globais
 let browser: Browser | null = null;
 let page: Page | null = null;
 let actionExecutor: ActionExecutor | null = null;
 const responseCache = new Map<string, AgentResponse>();
 const taskCache = new Map<string, Task>();
+
+// Fila de comandos para o agente desktop (Polling)
+let commandQueue: string[] = [];
 
 /**
  * Inicializa o navegador
@@ -90,68 +97,57 @@ app.get('/agent/info', (req: Request, res: Response) => {
  */
 app.post('/agent/message', async (req: Request, res: Response) => {
   try {
-    const { content, userId, context } = req.body;
+    const { content } = req.body;
 
     if (!content) {
-      return res.status(400).json({
-        error: 'Campo "content" é obrigatório'
-      });
+      return res.status(400).json({ error: 'Campo "content" é obrigatório' });
     }
 
     console.log(`[API] Recebida mensagem: ${content}`);
 
-    const messageId = uuidv4();
-
-    // 1. Interpretar mensagem
-    const intent = await aiBrainInstance.interpret(content);
-    console.log(`[API] Intenção detectada: ${intent.type} (${intent.confidence})`);
-
-    // 2. Planejar tarefa
-    const task = taskOrchestratorInstance.planTask(intent);
-    taskCache.set(task.id, task);
-
-    // 3. Executar tarefa
-    try {
-      await initBrowser();
-
-      if (page && actionExecutor) {
-        const executedTask = await actionExecutor.executeTask(task);
-        taskCache.set(executedTask.id, executedTask);
-
-        // 4. Gerar resposta
-        const response: AgentResponse = {
+    // Verificar se é comando para criar rotina
+    if (content.toLowerCase().includes('criar rotina')) {
+      commandQueue.push('create-routine');
+      console.log('[API] Comando "create-routine" adicionado à fila');
+      
+      return res.json({
+        success: true,
+        response: {
           id: uuidv4(),
-          messageId,
-          content: `Tarefa executada: ${executedTask.name}. Status: ${executedTask.status}`,
-          actions: executedTask.steps,
-          status: executedTask.status === 'COMPLETED' ? 'success' : 'error',
-          error: executedTask.error,
-          timestamp: new Date(),
-          executionTime: executedTask.executionTime || 0
-        };
-
-        responseCache.set(response.id, response);
-
-        res.json({
-          success: true,
-          response,
-          task: executedTask
-        });
-      } else {
-        throw new Error('Navegador não inicializado');
-      }
-    } catch (error) {
-      console.error(`[API] Erro ao executar tarefa: ${error}`);
-      res.status(500).json({
-        error: `Erro ao executar tarefa: ${String(error)}`,
-        taskId: task.id
+          content: '📝 Comando enviado! O agente está criando sua rotina no Obsidian...',
+          status: 'success',
+          timestamp: new Date()
+        }
       });
     }
+
+    // Resposta padrão para outros comandos
+    res.json({
+      success: true,
+      response: {
+        id: uuidv4(),
+        content: `Recebi sua mensagem: "${content}". Por enquanto, só sei "Criar rotina".`,
+        status: 'success',
+        timestamp: new Date()
+      }
+    });
+
   } catch (error) {
     console.error(`[API] Erro ao processar mensagem: ${error}`);
-    res.status(500).json({
-      error: `Erro ao processar mensagem: ${String(error)}`
-    });
+    res.status(500).json({ error: String(error) });
+  }
+});
+
+/**
+ * Endpoint de Polling para o Agente Desktop
+ */
+app.get('/api/agent/poll', (req: Request, res: Response) => {
+  if (commandQueue.length > 0) {
+    const command = commandQueue.shift();
+    console.log(`[POLL] Enviando comando para agente: ${command}`);
+    res.json({ command });
+  } else {
+    res.json({ status: 'no-command' });
   }
 });
 
@@ -328,14 +324,10 @@ app.post('/browser/close', async (req: Request, res: Response) => {
 });
 
 /**
- * Tratamento de erro 404
+ * Tratamento de erro 404 - Redirecionar para o frontend (SPA)
  */
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Endpoint não encontrado',
-    path: req.path,
-    method: req.method
-  });
+app.get('*', (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 /**
