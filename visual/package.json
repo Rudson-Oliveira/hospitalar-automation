@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && mkdir -p dist && cp src/web-interface/index.html dist/ && cp src/web-interface/script.js dist/ && cp src/web-interface/styles.css dist/ || true",
+    "build": "tsc && cp -r client-build/* dist/",
     "start": "node dist/server.js",
     "server": "ts-node src/server.ts",
     "dev:server": "ts-node src/server.ts",
