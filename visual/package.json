@@ -4,8 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && cp -r client-build/* dist/",
-    "start": "node dist/server.js",
+    "build": "tsc && mkdir -p dist && cp -r client-build/. dist/ && echo 'Frontend copied successfully'",    "start": "node dist/server.js",
     "server": "ts-node src/server.ts",
     "dev:server": "ts-node src/server.ts",
     "dev": "ts-node src/web-interface/dashboard-server.ts",
