@@ -57,7 +57,7 @@ class AIBrain {
 
 Analise a mensagem do usuário e retorne um JSON com a intenção detectada:
 {
-  "type": "NAVIGATE|CREATE_PURCHASE_ORDER|LIST_DEMANDS|GENERATE_REPORT|FILL_FORM|UNKNOWN",
+  "type": "NAVIGATE|CREATE_PURCHASE_ORDER|LIST_DEMANDS|GENERATE_REPORT|FILL_FORM|OPEN_APP|CHECK_STATUS|UNKNOWN",
   "confidence": 0.95,
   "params": {
     "quantity": 10,
@@ -111,6 +111,27 @@ Seja preciso e sempre retorne um JSON válido.`;
   private interpretWithRegex(query: string): Intent {
     const normalizedQuery = query.toLowerCase().trim();
     const params: Record<string, any> = {};
+
+    // Abrir Aplicativo (OS Level)
+    if (normalizedQuery.startsWith('abrir ') || normalizedQuery.startsWith('iniciar ') || normalizedQuery.startsWith('executar ')) {
+      const appName = query.split(' ').slice(1).join(' ');
+      return {
+        type: 'OPEN_APP',
+        confidence: 0.95,
+        params: { appName },
+        originalQuery: query
+      };
+    }
+
+    // Verificar Status
+    if (normalizedQuery.includes('status') || normalizedQuery.includes('estado') || normalizedQuery.includes('saúde') || normalizedQuery.includes('conectado')) {
+      return {
+        type: 'CHECK_STATUS',
+        confidence: 0.95,
+        params: {},
+        originalQuery: query
+      };
+    }
 
     // Navegação
     if (normalizedQuery.startsWith('ver ') || normalizedQuery.startsWith('navegar ') || normalizedQuery.startsWith('ir para ')) {

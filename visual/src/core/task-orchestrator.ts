@@ -30,6 +30,12 @@ class TaskOrchestrator {
       case 'EXTRACT_DATA':
         return this.planExtractData(taskId, intent);
 
+      case 'OPEN_APP':
+        return this.planOpenApp(taskId, intent);
+
+      case 'CHECK_STATUS':
+        return this.planCheckStatus(taskId, intent);
+
       default:
         taskName = 'Ação não mapeada';
         steps = [];
@@ -278,6 +284,52 @@ class TaskOrchestrator {
     return {
       id: taskId,
       name: 'Preencher Formulário',
+      steps,
+      status: 'PENDING',
+      currentStepIndex: 0
+    };
+  }
+
+  /**
+   * Planeja abertura de aplicativo
+   */
+  private planOpenApp(taskId: string, intent: Intent): Task {
+    const { appName } = intent.params;
+    const steps: ActionStep[] = [
+      {
+        id: 'oa-1',
+        type: 'OPEN_APP',
+        value: appName,
+        description: `Abrir aplicativo: ${appName}`
+      }
+    ];
+
+    return {
+      id: taskId,
+      name: `Abrir App: ${appName}`,
+      steps,
+      status: 'PENDING',
+      currentStepIndex: 0
+    };
+  }
+
+  /**
+   * Planeja verificação de status
+   */
+  private planCheckStatus(taskId: string, intent: Intent): Task {
+    // Tarefa dummy apenas para feedback visual, pois o status é retornado via chat
+    const steps: ActionStep[] = [
+      {
+        id: 'cs-1',
+        type: 'WAIT',
+        value: '500',
+        description: 'Verificando sistemas...'
+      }
+    ];
+
+    return {
+      id: taskId,
+      name: 'Verificar Status do Agente',
       steps,
       status: 'PENDING',
       currentStepIndex: 0

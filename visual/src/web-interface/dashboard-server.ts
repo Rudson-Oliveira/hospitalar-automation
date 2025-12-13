@@ -15,7 +15,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 5001;
 
 // Resolução robusta de caminhos estáticos
 // Tenta encontrar onde estão os arquivos HTML (pode variar entre dev/ts-node e prod/build)

@@ -1,5 +1,6 @@
 import { Page } from 'playwright';
 import { ActionStep, Task } from './types.js';
+import { exec } from 'child_process';
 
 export class ActionExecutor {
   private page: Page;
@@ -41,6 +42,9 @@ export class ActionExecutor {
 
         case 'EXECUTE_SCRIPT':
           return await this.executeScript(step.value);
+
+        case 'OPEN_APP':
+          return await this.openApp(step.value);
 
         default:
           console.warn(`[EXECUTOR] Tipo de ação desconhecido: ${step.type}`);
@@ -201,6 +205,45 @@ export class ActionExecutor {
       console.error(`[EXECUTOR] Erro ao capturar screenshot: ${error}`);
       return false;
     }
+  }
+
+  /**
+   * Abre um aplicativo local (OS Level)
+   */
+  private async openApp(appName?: string): Promise<boolean> {
+    if (!appName) return false;
+
+    console.log(`[EXECUTOR] Abrindo aplicativo: ${appName}`);
+    
+    return new Promise((resolve) => {
+        // Comando genérico para tentar abrir apps em Windows/Mac/Linux
+        // No Windows, 'start' é o comando mágico
+        let command = '';
+        if (process.platform === 'win32') {
+            command = `start "" "${appName}"`;
+        } else if (process.platform === 'darwin') {
+            command = `open -a "${appName}"`;
+        } else {
+            command = `xdg-open "${appName}"`; // Linux
+        }
+
+        exec(command, (error) => {
+            if (error) {
+                console.error(`[EXECUTOR] Erro ao abrir app: ${error.message}`);
+                // Tentar executar direto caso não seja um path
+                exec(appName, (err) => {
+                    if (err) {
+                        console.error(`[EXECUTOR] Falha total ao abrir ${appName}`);
+                        resolve(false);
+                    } else {
+                        resolve(true);
+                    }
+                });
+            } else {
+                resolve(true);
+            }
+        });
+    });
   }
 
   /**
