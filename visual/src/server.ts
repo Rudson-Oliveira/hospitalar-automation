@@ -77,6 +77,22 @@ async function closeBrowser(): Promise<void> {
 }
 
 /**
+ * Rota raiz - Servir React SPA
+ * Permite que React Router funcione corretamente
+ */
+app.get('/', (req: Request, res: Response) => {
+  res.sendFile(path.join(distPath, 'comet.html'));
+});
+
+/**
+ * Rota /comet.html - Alias para compatibilidade
+ * Mantém compatibilidade com links existentes
+ */
+app.get('/comet.html', (req: Request, res: Response) => {
+  res.sendFile(path.join(distPath, 'comet.html'));
+});
+
+/**
  * Health check
  */
 app.get('/health', (req: Request, res: Response) => {
