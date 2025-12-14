@@ -373,14 +373,6 @@ app.post('/agent/navigate', async (req: Request, res: Response) => {
   }
 });
 
-/**
- * Tratamento de erro 404 - Redirecionar para a página inicial
- */
-app.get('*', (req: Request, res: Response) => {
-  // Redirecionar qualquer rota desconhecida para /comet.html
-  console.log(`[SERVER] Rota desconhecida: ${req.path} - Redirecionando para /comet.html`);
-  res.redirect('/comet.html');
-});
 
 /**
  * Iniciar servidor
