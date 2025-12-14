@@ -24,11 +24,12 @@ const distPath = path.join(__dirname, '../dist');
 console.log(`[SERVER] Servindo arquivos estáticos de: ${distPath}`);
 // Forçar cache-control para evitar cache de arquivos antigos
 app.use(express.static(distPath, {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
-  }
+  },
+  index: false
 }));
 
 // Variáveis globais
@@ -376,19 +377,9 @@ app.post('/agent/navigate', async (req: Request, res: Response) => {
  * Tratamento de erro 404 - Redirecionar para a página inicial
  */
 app.get('*', (req: Request, res: Response) => {
-  // Se for uma rota desconhecida, redirecionar para /comet.html
-  if (!req.path.startsWith('/assets') && !req.path.includes('.')) {
-    console.log(`[SERVER] Rota desconhecida: ${req.path} - Redirecionando para /comet.html`);
-    return res.redirect('/comet.html');
-  }
-  
-  // Para arquivos estáticos não encontrados, retornar 404
-  console.log(`[SERVER] Arquivo não encontrado: ${req.path}`);
-  res.status(404).json({
-    success: false,
-    error: 'Arquivo não encontrado',
-    path: req.path
-  });
+  // Redirecionar qualquer rota desconhecida para /comet.html
+  console.log(`[SERVER] Rota desconhecida: ${req.path} - Redirecionando para /comet.html`);
+  res.redirect('/comet.html');
 });
 
 /**
