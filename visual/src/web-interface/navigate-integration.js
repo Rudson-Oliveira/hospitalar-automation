@@ -15,9 +15,26 @@ class NavigationManager {
    * Inicializa elementos da UI
    */
   initializeUI() {
-    // Criar container para screenshot se não existir
+    // Aguardar DOM estar completamente carregado
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setupContainer());
+    } else {
+      this.setupContainer();
+    }
+  }
+
+  /**
+   * Configura o container de screenshot
+   */
+  setupContainer() {
+    // Buscar container existente no HTML
     const existingContainer = document.getElementById('screenshot-container');
-    if (!existingContainer) {
+    
+    if (existingContainer) {
+      this.screenshotContainer = existingContainer;
+      console.log('[NAVIGATE] Container encontrado:', existingContainer);
+    } else {
+      // Criar container se não existir
       const container = document.createElement('div');
       container.id = 'screenshot-container';
       container.style.cssText = `
@@ -56,8 +73,7 @@ class NavigationManager {
       }
       
       this.screenshotContainer = container;
-    } else {
-      this.screenshotContainer = existingContainer;
+      console.log('[NAVIGATE] Container criado:', container);
     }
   }
 
@@ -99,6 +115,7 @@ class NavigationManager {
 
     this.isNavigating = true;
     this.updateStatus('🔄 Navegando para ' + url + '...');
+    console.log('[NAVIGATE] Iniciando navegação para:', url);
 
     try {
       // Chamar endpoint
@@ -115,6 +132,13 @@ class NavigationManager {
       }
 
       const result = await response.json();
+      console.log('[NAVIGATE] Resposta recebida:', {
+        success: result.success,
+        url: result.url,
+        title: result.title,
+        hasScreenshot: !!result.screenshot,
+        screenshotLength: result.screenshot ? result.screenshot.length : 0
+      });
 
       if (result.success) {
         this.currentUrl = result.url;
@@ -135,21 +159,49 @@ class NavigationManager {
    * Exibe o screenshot no container
    */
   displayScreenshot(result) {
-    const container = this.screenshotContainer;
-    if (!container) return;
+    console.log('[NAVIGATE] displayScreenshot chamado');
+    console.log('[NAVIGATE] Container:', this.screenshotContainer);
+    console.log('[NAVIGATE] Result:', result);
 
+    const container = this.screenshotContainer;
+    
+    // Validações
+    if (!container) {
+      console.error('[NAVIGATE] Container não encontrado!');
+      return;
+    }
+
+    if (!result || !result.screenshot) {
+      console.error('[NAVIGATE] Screenshot não encontrado no resultado!');
+      return;
+    }
+
+    console.log('[NAVIGATE] Limpando container...');
     // Limpar container
     container.innerHTML = '';
 
+    console.log('[NAVIGATE] Criando elementos...');
     // Criar elemento de imagem
     const img = document.createElement('img');
     img.src = `data:image/png;base64,${result.screenshot}`;
+    img.alt = `Screenshot de ${result.title}`;
     img.style.cssText = `
       max-width: 100%;
       max-height: 100%;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      object-fit: contain;
     `;
+
+    // Log quando a imagem carregar
+    img.onload = () => {
+      console.log('[NAVIGATE] ✅ Imagem carregada com sucesso!');
+    };
+
+    // Log se houver erro ao carregar
+    img.onerror = (error) => {
+      console.error('[NAVIGATE] ❌ Erro ao carregar imagem:', error);
+    };
 
     // Criar info
     const info = document.createElement('div');
@@ -157,13 +209,14 @@ class NavigationManager {
       position: absolute;
       top: 16px;
       left: 16px;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.95);
       color: #e2e8f0;
       padding: 12px 16px;
       border-radius: 6px;
       font-size: 12px;
       border: 1px solid #334155;
       z-index: 10;
+      max-width: 300px;
     `;
     info.innerHTML = `
       <div><strong>URL:</strong> ${result.url}</div>
@@ -182,9 +235,12 @@ class NavigationManager {
       justify-content: center;
     `;
 
+    console.log('[NAVIGATE] Adicionando elementos ao DOM...');
     wrapper.appendChild(img);
     wrapper.appendChild(info);
     container.appendChild(wrapper);
+    
+    console.log('[NAVIGATE] ✅ Screenshot exibido com sucesso!');
   }
 
   /**
@@ -221,7 +277,12 @@ class NavigationManager {
 window.NavigationManager = NavigationManager;
 
 // Inicializar quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.navigationManager = new NavigationManager();
+    console.log('[NAVIGATE] NavigationManager inicializado');
+  });
+} else {
   window.navigationManager = new NavigationManager();
   console.log('[NAVIGATE] NavigationManager inicializado');
-});
+}
