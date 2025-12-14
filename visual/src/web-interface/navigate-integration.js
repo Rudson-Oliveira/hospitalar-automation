@@ -230,9 +230,11 @@ class NavigationManager {
       position: relative;
       width: 100%;
       height: 100%;
-      display: flex;
+      display: flex !important;
       align-items: center;
       justify-content: center;
+      flex: 1;
+      overflow: auto;
     `;
 
     console.log('[NAVIGATE] Adicionando elementos ao DOM...');
