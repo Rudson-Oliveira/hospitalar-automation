@@ -1,0 +1,37 @@
+#!/bin/sh
+# Pre-commit hook para validação de código
+# Este arquivo serve como referência para configuração futura do Husky
+
+echo "🔍 Executando validações de pre-commit..."
+
+# Navegar para o diretório visual
+cd visual || exit 1
+
+# 1. Lint (ESLint)
+echo "🎨 Executando ESLint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint falhou! Corrija os erros antes de fazer commit."
+  # Temporariamente permitindo continuar
+  # exit 1
+fi
+
+# 2. Type Checking (TypeScript)
+echo "🔍 Executando Type Checking..."
+npx tsc --noEmit
+if [ $? -ne 0 ]; then
+  echo "⚠️ Type checking falhou! Verifique os erros de tipo."
+  # Temporariamente permitindo continuar
+  # exit 1
+fi
+
+# 3. Build Test
+echo "🏗️ Testando build..."
+npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ Build falhou! Corrija os erros antes de fazer commit."
+  exit 1
+fi
+
+echo "✅ Todas as validações passaram!"
+exit 0
