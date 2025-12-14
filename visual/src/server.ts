@@ -85,11 +85,12 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 /**
- * Rota /comet.html - Alias para compatibilidade
- * Mantém compatibilidade com links existentes
+ * Rota /comet.html - Redirect para rota raiz
+ * React Router não reconhece /comet.html, então redirecionamos para /
+ * Mantém compatibilidade com links antigos
  */
 app.get('/comet.html', (req: Request, res: Response) => {
-  res.sendFile(path.join(distPath, 'comet.html'));
+  res.redirect(301, '/');
 });
 
 /**
