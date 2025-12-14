@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "tsc && cp src/web-interface/*.html dist/ 2>/dev/null || true && cp src/web-interface/*.js dist/ 2>/dev/null || true && cp src/web-interface/*.css dist/ 2>/dev/null || true && cp -r client-build/assets dist/ 2>/dev/null || true && rm -f dist/index.html && echo 'Build completed successfully'",    "start": "node dist/server.js",
+        "build": "tsc || true && cp src/web-interface/comet.html dist/comet.html && cp src/web-interface/styles.css dist/styles.css && cp src/web-interface/script.js dist/script.js && cp -r client-build/assets dist/ 2>/dev/null || true && echo 'Build completed successfully'",    "start": "node dist/server.js",
     "server": "ts-node src/server.ts",
     "dev:server": "ts-node src/server.ts",
     "dev": "ts-node src/web-interface/dashboard-server.ts",
