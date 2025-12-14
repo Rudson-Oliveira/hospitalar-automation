@@ -185,12 +185,18 @@ class NavigationManager {
     const img = document.createElement('img');
     img.src = `data:image/png;base64,${result.screenshot}`;
     img.alt = `Screenshot de ${result.title}`;
+    img.className = 'screenshot-image';
     img.style.cssText = `
+      width: auto;
+      height: auto;
       max-width: 100%;
       max-height: 100%;
+      min-width: 200px;
+      min-height: 200px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       object-fit: contain;
+      display: block;
     `;
 
     // Log quando a imagem carregar
