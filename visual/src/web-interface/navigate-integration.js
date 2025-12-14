@@ -156,7 +156,7 @@ class NavigationManager {
   }
 
   /**
-   * Exibe o screenshot no container
+   * Exibe o screenshot no container - VERSÃO SIMPLIFICADA E ROBUSTA
    */
   displayScreenshot(result) {
     console.log('[NAVIGATE] displayScreenshot chamado');
@@ -177,40 +177,52 @@ class NavigationManager {
     }
 
     console.log('[NAVIGATE] Limpando container...');
-    // Limpar container
+    // Limpar container completamente
     container.innerHTML = '';
+    
+    // RESETAR ESTILOS DO CONTAINER para garantir que não haja interferência
+    container.style.cssText = `
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #0f172a;
+      border-radius: 8px;
+      overflow: auto;
+      padding: 0;
+      position: relative;
+    `;
 
     console.log('[NAVIGATE] Criando elementos...');
-    // Criar elemento de imagem
+    
+    // Criar imagem DIRETAMENTE no container (sem wrapper)
     const img = document.createElement('img');
     img.src = `data:image/png;base64,${result.screenshot}`;
     img.alt = `Screenshot de ${result.title}`;
-    img.className = 'screenshot-image';
+    img.id = 'screenshot-image';
     img.style.cssText = `
-      width: auto;
+      width: 100%;
       height: auto;
-      max-width: 100%;
-      max-height: 100%;
-      min-width: 200px;
-      min-height: 200px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      object-fit: contain;
       display: block;
+      margin: 0;
+      padding: 0;
     `;
 
     // Log quando a imagem carregar
     img.onload = () => {
       console.log('[NAVIGATE] ✅ Imagem carregada com sucesso!');
+      console.log('[NAVIGATE] Dimensões naturais:', img.naturalWidth, 'x', img.naturalHeight);
+      console.log('[NAVIGATE] Dimensões renderizadas:', img.width, 'x', img.height);
     };
 
     // Log se houver erro ao carregar
     img.onerror = (error) => {
       console.error('[NAVIGATE] ❌ Erro ao carregar imagem:', error);
+      container.innerHTML = '<div style="color: red; padding: 20px;">Erro ao carregar screenshot</div>';
     };
 
-    // Criar info
+    // Criar info overlay
     const info = document.createElement('div');
+    info.id = 'screenshot-info';
     info.style.cssText = `
       position: absolute;
       top: 16px;
@@ -221,8 +233,9 @@ class NavigationManager {
       border-radius: 6px;
       font-size: 12px;
       border: 1px solid #334155;
-      z-index: 10;
+      z-index: 1000;
       max-width: 300px;
+      pointer-events: none;
     `;
     info.innerHTML = `
       <div><strong>URL:</strong> ${result.url}</div>
@@ -230,23 +243,9 @@ class NavigationManager {
       <div><strong>Capturado:</strong> ${new Date(result.timestamp).toLocaleTimeString('pt-BR')}</div>
     `;
 
-    // Criar wrapper com posição relativa
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = `
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      overflow: auto;
-    `;
-
     console.log('[NAVIGATE] Adicionando elementos ao DOM...');
-    wrapper.appendChild(img);
-    wrapper.appendChild(info);
-    container.appendChild(wrapper);
+    container.appendChild(img);
+    container.appendChild(info);
     
     console.log('[NAVIGATE] ✅ Screenshot exibido com sucesso!');
   }
