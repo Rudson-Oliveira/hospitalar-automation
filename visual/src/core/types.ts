@@ -5,6 +5,8 @@ export type IntentType =
   | 'GENERATE_REPORT'
   | 'FILL_FORM' 
   | 'EXTRACT_DATA' 
+  | 'OPEN_APP'
+  | 'CHECK_STATUS'
   | 'UNKNOWN';
 
 export interface Intent {
@@ -23,7 +25,7 @@ export interface Entity {
 
 export interface ActionStep {
   id: string;
-  type: 'CLICK' | 'TYPE' | 'NAVIGATE' | 'WAIT' | 'READ' | 'SELECT' | 'SCREENSHOT' | 'EXECUTE_SCRIPT' | 'EXTRACT_DATA';
+  type: 'CLICK' | 'TYPE' | 'NAVIGATE' | 'WAIT' | 'READ' | 'SELECT' | 'SCREENSHOT' | 'EXECUTE_SCRIPT' | 'EXTRACT_DATA' | 'OPEN_APP' | 'CHECK_STATUS';
   selector?: string;
   value?: string;
   description: string;

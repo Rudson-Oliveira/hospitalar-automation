@@ -3,7 +3,8 @@
  * Gerencia autenticação e integração com o sistema hospitalar
  */
 
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+type AxiosInstance = any;
 import { Page, Browser } from 'playwright';
 
 export interface HospitalAuthConfig {

@@ -24,7 +24,7 @@ export class HybridAgent {
     }
 
     public async executeCommand(command: string) {
-        const intent = this.brain.interpret(command);
+        const intent = await this.brain.interpret(command);
         
         // DECISÃO HÍBRIDA INTELIGENTE
         

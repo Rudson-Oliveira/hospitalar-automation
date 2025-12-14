@@ -1,5 +1,5 @@
 import { Page, Browser } from 'playwright';
-import sharp from 'sharp';
+// import sharp from 'sharp'; // Não necessário - Playwright já captura em base64
 
 /**
  * Interface para resposta de navegação

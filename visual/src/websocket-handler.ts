@@ -5,7 +5,8 @@
 
 import { WebSocket, WebSocketServer } from 'ws';
 import { Server } from 'http';
-import { ScreenStreamer } from './services/screen-streamer';
+// import { ScreenStreamer } from './services/screen-streamer';
+type ScreenStreamer = any;
 
 export interface StreamClient {
   id: string;
@@ -39,7 +40,7 @@ class WebSocketHandler {
 
       // Enviar frames para este cliente
       if (this.screenStreamer) {
-        this.screenStreamer.on('frame', (frame) => {
+        this.screenStreamer.on('frame', (frame: any) => {
           if (client.connected && ws.readyState === WebSocket.OPEN) {
             try {
               ws.send(JSON.stringify(frame));
@@ -49,7 +50,7 @@ class WebSocketHandler {
           }
         });
 
-        this.screenStreamer.on('action', (action) => {
+        this.screenStreamer.on('action', (action: any) => {
           if (client.connected && ws.readyState === WebSocket.OPEN) {
             try {
               ws.send(JSON.stringify(action));
