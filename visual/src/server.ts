@@ -97,12 +97,22 @@ app.get('/comet.html', (req: Request, res: Response) => {
  * Health check
  */
 app.get('/health', (req: Request, res: Response) => {
-  res.json({
+  const memoryUsage = process.memoryUsage();
+  const healthStatus = {
     status: 'ok',
-    timestamp: new Date(),
+    timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    browserActive: browser !== null
-  });
+    browserActive: browser !== null,
+    memory: {
+      rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+      heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+      heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`
+    },
+    ready: true
+  };
+  
+  console.log(`[HEALTH] Health check OK - Uptime: ${Math.round(process.uptime())}s, Browser: ${browser !== null}`);
+  res.status(200).json(healthStatus);
 });
 
 /**
@@ -415,12 +425,23 @@ process.on('SIGINT', async () => {
 });
 
 process.on('SIGTERM', async () => {
-  console.log('[SERVER] Encerrando servidor (SIGTERM)...');
+  console.log('\n🚨 [SERVER] SIGTERM recebido!');
+  console.log(`[SERVER] Uptime antes do shutdown: ${Math.round(process.uptime())}s`);
+  console.log(`[SERVER] Timestamp: ${new Date().toISOString()}`);
+  console.log('[SERVER] Iniciando graceful shutdown...');
+  
   await closeBrowser();
+  
   server.close(() => {
-    console.log('[SERVER] Servidor encerrado');
+    console.log('[SERVER] Servidor encerrado com sucesso');
     process.exit(0);
   });
+  
+  // Timeout de segurança: forçar encerramento após 10 segundos
+  setTimeout(() => {
+    console.error('[SERVER] Timeout de shutdown excedido, forçando encerramento');
+    process.exit(1);
+  }, 10000);
 });
 
 // Tratamento de erros não capturados
