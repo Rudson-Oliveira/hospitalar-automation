@@ -10,10 +10,11 @@ import { UserMessage, AgentResponse, Task } from './core/types';
 import { NavigateHandler } from './handlers/navigate-handler';
 
 // Carregar variáveis de ambiente
-dotenv.config();
+
 
 const app = express();
 const port = process.env.PORT || 3000;
+dotenv.config();
 
 // Middleware
 app.use(express.json());
