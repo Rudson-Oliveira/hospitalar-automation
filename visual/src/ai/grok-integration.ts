@@ -56,8 +56,8 @@ export class GrokAI {
         }
       );
 
-      const content = response.data.choices[0].message.content;
-      const reasoning = response.data.choices[0].message.reasoning || '';
+      const content = (response.data as any).choices[0].message.content;
+      const reasoning = (response.data as any).choices[0].message.reasoning || '';
 
       console.log('[GrokAI] Resposta recebida:', content.substring(0, 100) + '...');
 
@@ -117,7 +117,7 @@ export class GrokAI {
         }
       );
 
-      const content = response.data.choices[0].message.content;
+      const content = (response.data as any).choices[0].message.content;
 
       console.log('[GrokAI] Código executado com sucesso');
 
@@ -169,7 +169,7 @@ export class GrokAI {
         }
       );
 
-      const content = response.data.choices[0].message.content;
+      const content = (response.data as any).choices[0].message.content;
 
       console.log('[GrokAI] Busca concluída');
 

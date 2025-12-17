@@ -166,11 +166,11 @@ export class NavigateHandler {
       });
 
       // Aguardar carregamento dinâmico
-      await page.waitForTimeout(1500);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Capturar screenshot
-      const screenshotBuffer = await page.screenshot({ fullPage: true });
-      const base64Screenshot = screenshotBuffer.toString('base64');
+      const screenshotBuffer = await page.screenshot();
+      const base64Screenshot = Buffer.from(screenshotBuffer).toString('base64');
 
       // Obter título
       const title = await page.title();

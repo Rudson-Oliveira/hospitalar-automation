@@ -33,7 +33,11 @@ export class IntelligentOrchestrator {
   private grok: GrokAI;
 
   constructor() {
-    this.abacus = new AbacusAI();
+    this.abacus = new AbacusAI({
+      apiKey: process.env.ABACUS_API_KEY || '',
+      baseUrl: 'https://routellm.abacus.ai',
+      model: 'gpt-4'
+    });
     this.grok = new GrokAI();
   }
 
@@ -145,12 +149,7 @@ export class IntelligentOrchestrator {
       console.log('[Orchestrator] Tarefa simples - usando Abacus.AI');
       steps.push('Usando Abacus.AI');
       
-      const abacusResult = await this.abacus.chat([
-        {
-          role: 'user',
-          content: context.task
-        }
-      ]);
+      const abacusResult = await this.abacus.processMessage(context.task);
 
       if (!abacusResult.success) {
         throw new Error(`Abacus falhou: ${abacusResult.error}`);
@@ -160,7 +159,7 @@ export class IntelligentOrchestrator {
       
       return {
         success: true,
-        result: abacusResult.content,
+        result: abacusResult.response || 'Tarefa processada',
         steps
       };
 
