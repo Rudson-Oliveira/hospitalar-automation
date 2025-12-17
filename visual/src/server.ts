@@ -10,7 +10,7 @@ import { UserMessage, AgentResponse, Task } from './core/types';
 import { NavigateHandler } from './handlers/navigate-handler';
 import { handleIntelligentMessage, initializeIntelligentHandler } from './handlers/intelligent-message-handler';
 import { createPatient, PatientData } from './handlers/create-patient-handler';
-import { createPatientSimple, PatientDataSimple } from './handlers/create-patient-handler-v2';
+import { createPatientV3, PatientDataSimple } from './handlers/create-patient-handler-v3';
 import { orchestrator } from './ai/intelligent-orchestrator';
 
 // Carregar variáveis de ambiente
@@ -451,8 +451,8 @@ app.post('/agent/create-patient', async (req: Request, res: Response) => {
       });
     }
 
-    // Criar paciente usando handler V2 (formulário simplificado)
-    const result = await createPatientSimple(page, patientData);
+    // Criar paciente usando handler V3 (autocomplete corrigido)
+    const result = await createPatientV3(page, patientData);
 
     res.json(result);
   } catch (error: any) {
