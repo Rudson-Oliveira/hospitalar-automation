@@ -9,6 +9,7 @@ import { ActionExecutor } from './core/action-executor';
 import { UserMessage, AgentResponse, Task } from './core/types';
 import { NavigateHandler } from './handlers/navigate-handler';
 import { handleIntelligentMessage, initializeIntelligentHandler } from './handlers/intelligent-message-handler';
+import { createPatient, PatientData } from './handlers/create-patient-handler';
 
 // Carregar variáveis de ambiente
 
@@ -403,6 +404,46 @@ app.post('/agent/navigate', async (req: Request, res: Response) => {
   }
 });
 
+
+/**
+ * Criar paciente no sistema Hospitalar
+ */
+app.post('/agent/create-patient', async (req: Request, res: Response) => {
+  try {
+    const patientData: PatientData = req.body;
+
+    if (!patientData || !patientData.nome) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dados do paciente são obrigatórios'
+      });
+    }
+
+    console.log(`[API] Criando paciente: ${patientData.nome}`);
+
+    // Inicializar navegador se necessário
+    await initBrowser();
+
+    if (!page) {
+      return res.status(500).json({
+        success: false,
+        message: 'Navegador não disponível'
+      });
+    }
+
+    // Criar paciente
+    const result = await createPatient(page, patientData);
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('[API] Erro ao criar paciente:', error);
+    res.status(500).json({
+      success: false,
+      message: `Erro ao criar paciente: ${error.message}`,
+      error: error.message
+    });
+  }
+});
 
 /**
  * Iniciar servidor
