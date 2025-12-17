@@ -74,7 +74,7 @@ export async function createPatientV3(
     steps.push('Clicando em ADICIONAR PACIENTE');
     const addButton = page.locator('button:has-text("ADICIONAR PACIENTE")').first();
     
-    if (await addButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await addButton.isVisible({ timeout: 30000 }).catch(() => false)) {
       await addButton.click();
       steps.push('✅ Botão ADICIONAR PACIENTE clicado');
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -87,7 +87,7 @@ export async function createPatientV3(
     steps.push('Aguardando modal Novo Paciente');
     const modalTitle = page.locator('text=Novo Paciente').first();
     
-    if (await modalTitle.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await modalTitle.isVisible({ timeout: 30000 }).catch(() => false)) {
       steps.push('✅ Modal Novo Paciente aberto');
     } else {
       steps.push('⚠️  Modal não encontrado, mas continuando...');
@@ -97,7 +97,7 @@ export async function createPatientV3(
     steps.push('Preenchendo campo Nome');
     const nomeField = page.locator('#inputName').first();
     
-    if (await nomeField.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await nomeField.isVisible({ timeout: 30000 }).catch(() => false)) {
       await nomeField.clear();
       await nomeField.fill(patientData.nome);
       steps.push(`✅ Nome preenchido: ${patientData.nome}`);
@@ -112,7 +112,7 @@ export async function createPatientV3(
       steps.push('Preenchendo campo Cidade');
       const cidadeField = page.locator('#inputCidade').first();
       
-      if (await cidadeField.isVisible({ timeout: 5000 }).catch(() => false)) {
+      if (await cidadeField.isVisible({ timeout: 30000 }).catch(() => false)) {
         await cidadeField.clear();
         await cidadeField.fill(patientData.cidade);
         steps.push(`✅ Cidade digitada: ${patientData.cidade}`);
@@ -142,7 +142,7 @@ export async function createPatientV3(
     steps.push('Preenchendo campo Convênio');
     const convenioField = page.locator('#inputConvenio').first();
     
-    if (await convenioField.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await convenioField.isVisible({ timeout: 30000 }).catch(() => false)) {
       // Extrair primeiras palavras do convênio para busca
       const convenioSearch = patientData.convenio.split(' ').slice(0, 2).join(' ');
       
@@ -157,7 +157,7 @@ export async function createPatientV3(
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Aguardar dropdown aparecer
-      const dropdownVisible = await page.locator('mat-option').first().isVisible({ timeout: 5000 }).catch(() => false);
+      const dropdownVisible = await page.locator('mat-option').first().isVisible({ timeout: 30000 }).catch(() => false);
       
       if (dropdownVisible) {
         steps.push('✅ Dropdown de convênio apareceu');
@@ -193,7 +193,7 @@ export async function createPatientV3(
     steps.push('Clicando no botão SALVAR');
     const salvarButton = page.locator('button:has-text("SALVAR")').first();
     
-    if (await salvarButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await salvarButton.isVisible({ timeout: 30000 }).catch(() => false)) {
       await salvarButton.click();
       steps.push('✅ Botão SALVAR clicado');
       
