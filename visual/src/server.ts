@@ -8,6 +8,7 @@ import taskOrchestratorInstance from './core/task-orchestrator';
 import { ActionExecutor } from './core/action-executor';
 import { UserMessage, AgentResponse, Task } from './core/types';
 import { NavigateHandler } from './handlers/navigate-handler';
+import { handleIntelligentMessage, initializeIntelligentHandler } from './handlers/intelligent-message-handler';
 
 // Carregar variáveis de ambiente
 
@@ -138,7 +139,7 @@ app.get('/agent/info', (req: Request, res: Response) => {
 });
 
 /**
- * Processar mensagem do usuário
+ * Processar mensagem do usuário com Abacus.AI
  */
 app.post('/agent/message', async (req: Request, res: Response) => {
   try {
@@ -150,16 +151,17 @@ app.post('/agent/message', async (req: Request, res: Response) => {
 
     console.log(`[API] Recebida mensagem: ${content}`);
 
-    // Verificar se é comando para criar rotina
-    if (content.toLowerCase().includes('criar rotina')) {
-      commandQueue.push('create-routine');
-      console.log('[API] Comando "create-routine" adicionado à fila');
-      
+    // Processar com Abacus.AI (inteligência autônoma)
+    const result = await handleIntelligentMessage({ content });
+    
+    if (result.success) {
       return res.json({
         success: true,
         response: {
           id: uuidv4(),
-          content: '📝 Comando enviado! O agente está criando sua rotina no Obsidian...',
+          content: result.response.content,
+          action: result.response.action,
+          reasoning: result.response.reasoning,
           status: 'success',
           timestamp: new Date()
         }
