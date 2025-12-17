@@ -38,14 +38,18 @@ export interface MessageResponse {
 export async function handleIntelligentMessage(req: MessageRequest): Promise<MessageResponse> {
   try {
     if (!abacus) {
+      console.log('[IntelligentHandler] Initializing Abacus.AI...');
       initializeIntelligentHandler();
     }
 
     const userMessage = req.content;
     console.log('[IntelligentHandler] Processing message:', userMessage);
+    console.log('[IntelligentHandler] API Key configured:', ABACUS_API_KEY ? 'YES' : 'NO');
 
     // Processar com Abacus.AI
+    console.log('[IntelligentHandler] Calling Abacus.AI API...');
     const result = await abacus.processMessage(userMessage);
+    console.log('[IntelligentHandler] Abacus.AI result:', JSON.stringify(result));
 
     if (!result.success) {
       return {
