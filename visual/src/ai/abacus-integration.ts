@@ -33,7 +33,7 @@ export class AbacusAI {
 
   constructor(config: AbacusConfig) {
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl || 'https://api.abacus.ai/v1';
+    this.baseUrl = config.baseUrl || 'https://routellm.abacus.ai';
     this.model = config.model || 'gpt-4';
     
     // System prompt para contexto do agente COMET
