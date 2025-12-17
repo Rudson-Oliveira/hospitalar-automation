@@ -10,6 +10,7 @@ import { UserMessage, AgentResponse, Task } from './core/types';
 import { NavigateHandler } from './handlers/navigate-handler';
 import { handleIntelligentMessage, initializeIntelligentHandler } from './handlers/intelligent-message-handler';
 import { createPatient, PatientData } from './handlers/create-patient-handler';
+import { createPatientSimple, PatientDataSimple } from './handlers/create-patient-handler-v2';
 import { orchestrator } from './ai/intelligent-orchestrator';
 
 // Carregar variáveis de ambiente
@@ -429,12 +430,12 @@ app.post('/agent/navigate', async (req: Request, res: Response) => {
  */
 app.post('/agent/create-patient', async (req: Request, res: Response) => {
   try {
-    const patientData: PatientData = req.body;
+    const patientData: PatientDataSimple = req.body;
 
-    if (!patientData || !patientData.nome) {
+    if (!patientData || !patientData.nome || !patientData.convenio) {
       return res.status(400).json({
         success: false,
-        message: 'Dados do paciente são obrigatórios'
+        message: 'Nome e Convênio são obrigatórios'
       });
     }
 
@@ -450,8 +451,8 @@ app.post('/agent/create-patient', async (req: Request, res: Response) => {
       });
     }
 
-    // Criar paciente
-    const result = await createPatient(page, patientData);
+    // Criar paciente usando handler V2 (formulário simplificado)
+    const result = await createPatientSimple(page, patientData);
 
     res.json(result);
   } catch (error: any) {
