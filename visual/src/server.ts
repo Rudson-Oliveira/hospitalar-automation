@@ -10,6 +10,7 @@ import { UserMessage, AgentResponse, Task } from './core/types';
 import { NavigateHandler } from './handlers/navigate-handler';
 import { handleIntelligentMessage, initializeIntelligentHandler } from './handlers/intelligent-message-handler';
 import { createPatient, PatientData } from './handlers/create-patient-handler';
+import { orchestrator } from './ai/intelligent-orchestrator';
 
 // Carregar variáveis de ambiente
 
@@ -152,7 +153,25 @@ app.post('/agent/message', async (req: Request, res: Response) => {
 
     console.log(`[API] Recebida mensagem: ${content}`);
 
-    // Processar com Abacus.AI (inteligência autônoma)
+    // Usar Intelligent Orchestrator (Abacus.AI + Grok + COMET Bridge)
+    const orchestrationResult = await orchestrator.processMessage(content);
+    
+    if (orchestrationResult.success) {
+      return res.json({
+        success: true,
+        response: {
+          id: uuidv4(),
+          content: orchestrationResult.result,
+          reasoning: orchestrationResult.reasoning,
+          steps: orchestrationResult.steps,
+          status: 'success',
+          timestamp: new Date()
+        }
+      });
+    }
+
+    // Fallback para handler antigo se orquestrador falhar
+    console.log('[API] Orchestrator falhou, usando fallback');
     const result = await handleIntelligentMessage({ content });
     
     if (result.success) {
