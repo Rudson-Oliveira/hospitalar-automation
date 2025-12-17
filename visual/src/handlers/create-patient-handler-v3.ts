@@ -72,15 +72,15 @@ export async function createPatientV3(
     
     // Passo 4: Clicar no botão "ADICIONAR PACIENTE"
     steps.push('Clicando em ADICIONAR PACIENTE');
-    const addButton = page.locator('button:has-text("ADICIONAR PACIENTE")').first();
+    const addButton = page.locator('button:has-text("PACIENTE")').first();
     
     if (await addButton.isVisible({ timeout: 30000 }).catch(() => false)) {
       await addButton.click();
-      steps.push('✅ Botão ADICIONAR PACIENTE clicado');
+      steps.push('✅ Botão PACIENTE clicado');
       await new Promise(resolve => setTimeout(resolve, 1500));
     } else {
-      steps.push('❌ Botão ADICIONAR PACIENTE não encontrado');
-      throw new Error('Botão ADICIONAR PACIENTE não encontrado');
+      steps.push('❌ Botão PACIENTE não encontrado');
+      throw new Error('Botão PACIENTE não encontrado');
     }
     
     // Passo 5: Aguardar modal "Novo Paciente" aparecer
