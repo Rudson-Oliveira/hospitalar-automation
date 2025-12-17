@@ -70,17 +70,42 @@ export async function createPatientV3(
     console.log('[CreatePatientV3] Página de pacientes carregada');
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Passo 4: Clicar no botão "ADICIONAR PACIENTE"
+    // Passo 4: Clicar no botão "ADICIONAR PACIENTE" com múltiplos seletores
     steps.push('Clicando em ADICIONAR PACIENTE');
-    const addButton = page.locator('button:has-text("PACIENTE")').first();
     
-    if (await addButton.isVisible({ timeout: 30000 }).catch(() => false)) {
+    // Tentar múltiplos seletores como fallback
+    const selectors = [
+      'button:has-text("PACIENTE")',
+      '//button[contains(text(), "PACIENTE")]',
+      'text=PACIENTE',
+      'button:has-text("ADICIONAR")',
+      '//button[contains(text(), "ADICIONAR")]'
+    ];
+    
+    let addButton = null;
+    let selectorUsed = '';
+    
+    for (const selector of selectors) {
+      try {
+        const locator = page.locator(selector).first();
+        if (await locator.isVisible({ timeout: 5000 }).catch(() => false)) {
+          addButton = locator;
+          selectorUsed = selector;
+          steps.push(`✅ Botão encontrado com seletor: ${selector}`);
+          break;
+        }
+      } catch (e) {
+        // Continuar tentando próximo seletor
+      }
+    }
+    
+    if (addButton) {
       await addButton.click();
-      steps.push('✅ Botão PACIENTE clicado');
+      steps.push('✅ Botão clicado com sucesso');
       await new Promise(resolve => setTimeout(resolve, 1500));
     } else {
-      steps.push('❌ Botão PACIENTE não encontrado');
-      throw new Error('Botão PACIENTE não encontrado');
+      steps.push('❌ Botão não encontrado com nenhum seletor');
+      throw new Error('Botão ADICIONAR PACIENTE não encontrado com nenhum seletor');
     }
     
     // Passo 5: Aguardar modal "Novo Paciente" aparecer
