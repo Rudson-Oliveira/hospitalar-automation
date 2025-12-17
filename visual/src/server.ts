@@ -99,6 +99,13 @@ app.get('/comet.html', (req: Request, res: Response) => {
 });
 
 /**
+ * Rota /quick-actions - Página de ações rápidas
+ */
+app.get('/quick-actions', (req: Request, res: Response) => {
+  res.sendFile(path.join(distPath, 'quick-actions.html'));
+});
+
+/**
  * Health check
  */
 app.get('/health', (req: Request, res: Response) => {
