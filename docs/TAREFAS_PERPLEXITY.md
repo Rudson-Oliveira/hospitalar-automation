@@ -52,6 +52,36 @@ Documentacao das tarefas automatizadas configuradas no Perplexity Tasks para mon
 
 ---
 
+## COMPRAS
+
+### Ciclo Matinal
+
+| Horario | Tarefa | Descricao |
+|---------|--------|----------|
+| 07:00 | Monitoramento - Abertura e Demandas | Novas demandas, pedidos pendentes, urgencias >R$5.000 |
+
+### Ciclo Diurno
+
+| Horario | Tarefa | Descricao |
+|---------|--------|----------|
+| 10:00 | Monitoramento - Cotacoes Bionexo | Cotacoes, comparativo de precos, economia >10% |
+| 13:00 | Monitoramento - Analise de Entregas | Status entregas, atrasos >24h, notas fiscais |
+
+### Ciclo Vespertino
+
+| Horario | Tarefa | Descricao |
+|---------|--------|----------|
+| 16:00 | Monitoramento - Fechamento Diario | Consolidacao financeira, pedidos processados |
+
+### Tarefas Periodicas
+
+| Frequencia | Tarefa | Horario |
+|------------|--------|----------|
+| Semanal | Relatorio Semanal - Economia e Performance | Sexta 15:00 |
+| Mensal | Auditoria Mensal - Fornecedores e Contratos | Dia 31, 17:00 |
+
+---
+
 ## RELATORIOS EXECUTIVOS
 
 | Frequencia | Tarefa | Horario |
