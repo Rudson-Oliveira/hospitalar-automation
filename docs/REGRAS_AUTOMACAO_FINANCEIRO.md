@@ -11,6 +11,10 @@ Documento com regras claras para automacao financeira via IA (Comet/Perplexity).
 ## 1. EMAILS DE DESTINO
 
 ### Autorizacao de Pagamentos:
+
+### REGRA IMPORTANTE - Horario de Envio:
+**A partir das 07:30**, todos os emails do setor financeiro devem ser enviados TAMBEM para:
+- **financeiro02@hospitalarsaude.com.br** (copia obrigatoria)
 | Tipo | Email | Funcao |
 |------|-------|--------|
 | **Gestor** | rud.pa@hotmail.com | Autoriza pagamentos |
