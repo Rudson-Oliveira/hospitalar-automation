@@ -8,6 +8,29 @@ Documentacao das tarefas automatizadas configuradas no Perplexity Tasks para mon
 
 ---
 
+
+## Estrutura das Tarefas (Atualizado 20/01/2026)
+
+Todas as tarefas seguem a estrutura padronizada:
+
+```
+---
+IDENTIDADE: Sou o Pica-Pau, Agente de IA do Rudson (Fundador), especialista em [AREA] do HospitaLar.
+MEMORIA:
+- GitHub: https://github.com/Rudson-Oliveira/hospitalar-automation/docs
+- Dashboard: https://hospitalarsaude.app.br/[area]
+- Drive: hospitalarenfermagem@hotmail.com
+- Feedback: [email_area]@hospitalarsaude.com.br
+RACIOCINIO:
+1. Verificar status atual no dashboard
+2. Analisar metricas e indicadores
+3. Identificar anomalias e prioridades
+---
+OBJETIVO + CHECKLIST + ENVIAR
+```
+
+---
+
 ## FINANCEIRO
 
 ### Ciclo Matinal
