@@ -699,3 +699,342 @@ Ação: Atualizar cadastro antes do faturamento
 ---
 
 **FIM DA SEÇÃO DE INTEGRAÇÃO**
+
+
+
+---
+
+## 8. DEPENDÊNCIAS CRÍTICAS DO FATURAMENTO - MAPA DE INTEGRAÇÕES
+
+### 8.1 VISÃO ESTRATÉGICA
+
+> 🎯 **"O Faturamento não existe sozinho. É o ponto de conversão entre o atendimento clínico e a receita financeira."**
+
+Jeca Tatu (Agente Faturamento) depende de **5 setores críticos** para executar sua função:
+
+```
+                    ┌────────────────────────┐
+                    │    ORÇAMENTOS        │
+                    │  (Início do ciclo)  │
+                    └─────────┬─────────────┘
+                             │
+                             ▼
+                    ┌─────────┴─────────────┐
+                    │   📦 FATURAMENTO   │
+                    │   (Jeca Tatu)      │
+                    └───┬────┬────┬────┬────┘
+        ┌────────┴──┐  │    │    │    │
+        ▼           ▼  ▼    ▼    ▼
+   AUDITORIA  AUTORIZAÇÕES FISCAL FINANCEIRO
+  (Validação) (Aprovação)  (NF)  (Recebe)
+```
+
+---
+
+### 8.2 DEPENDÊNCIA 1: ORÇAMENTOS 📊
+
+#### **Importância para Faturamento:**
+Sem orçamento aprovado, **NÃO HÁ O QUE FATURAR**. É a origem de tudo.
+
+#### **Fluxo de Dados:**
+```
+Paciente atendido → Orçamento criado → Operadora aprova → JECA TATU recebe
+```
+
+#### **Dados que Jeca Tatu PRECISA dos Orçamentos:**
+- ✅ Status: Aprovado/Aguardando/Reprovado
+- ✅ Código do orçamento (ex: 64321, 63998)
+- ✅ Paciente vinculado
+- ✅ Operadora de saúde
+- ✅ Procedimentos/itens aprovados
+- ✅ Valores autorizados
+- ✅ Período de validade
+
+#### **Exemplo Real do Sistema:**[screenshot:86]
+- Orçamento 64321 - GERALDA DE OLIVEIRA COUTINHO - 23/03/2025
+- Orçamento 63998 - GERALDA DE OLIVEIRA COUTINHO - 11/04/2025
+
+#### **SEM Orçamento aprovado:**
+❌ Jeca Tatu NÃO pode emitir guia
+❌ NÃO pode gerar XML
+❌ NÃO há receita para o Financeiro
+
+---
+
+### 8.3 DEPENDÊNCIA 2: AUDITORIA 🔍
+
+#### **Importância para Faturamento:**
+Auditoria **VALIDA** se os procedimentos estão corretos, evitando **glosas** (rejeições de pagamento).
+
+#### **Fluxo de Dados:**
+```
+Guia emitida → Auditoria revisa → Aprova/Solicita correção → Jeca Tatu ajusta ou envia
+```
+
+#### **O que Auditoria verifica:**
+- ✅ Códigos TISS estão corretos?
+- ✅ Procedimentos condizem com CID10?
+- ✅ Valores estão dentro da tabela da operadora?
+- ✅ Documentação completa (prescrições, laudos)?
+- ✅ Materiais utilizados estão justificados?
+
+#### **Exemplo de Integração:**
+Sistema possui relatório **"Espelho fiscal"** que Auditoria usa para validar.
+
+#### **SEM Auditoria:**
+⚠️ Risco alto de **glosa** (operadora recusa pagamento)
+⚠️ Receita esperada NÃO se concretiza
+⚠️ Retrabalho: refazer guia, XML, envio
+
+#### **Comunicação Jeca Tatu ↔️ Auditoria:**
+```
+Auditoria: "Guia #8210 - CID10 inválido para procedimento X"
+Jeca Tatu: Corrige CID10 → Regenera guia → Reenvia para aprovação
+```
+
+---
+
+### 8.4 DEPENDÊNCIA 3: AUTORIZAÇÕES 📝
+
+#### **Importância para Faturamento:**
+Autorizações são a **APROVAÇÃO FORMAL** da operadora. Sem autorização = Sem pagamento garantido.
+
+#### **Fluxo de Dados:**
+```
+XML enviado → Operadora analisa → Autoriza/Nega/Solicita aditivo → Jeca Tatu atualiza status
+```
+
+#### **Painel de Autorizações no Sistema:**[screenshot:86]
+- Total de aditivos: 0
+- Aditivos autorizados: 0  
+- Aditivos em análise: 0
+- Aditivos indeferidos: 0
+- Aditivos em andamento: 0
+
+#### **Dados que Jeca Tatu PRECISA:**
+- ✅ Número da autorização da operadora
+- ✅ Status: Autorizado/Negado/Pendente
+- ✅ Prazo de validade da autorização
+- ✅ Valores autorizados (pode ser diferente do solicitado)
+- ✅ Observações/restrições
+
+#### **Ciclo de Vida:**
+```
+1. Jeca Tatu: Envia XML dia 13/11/2025
+2. Aguarda: Operadora processa (prazo médio: 5-15 dias)
+3. Monitora: Painel de Autorizações
+4. Recebe: Autorização #123456 aprovada
+5. Vincula: Autorização → Guia #8210
+6. Libera: Para Fiscal emitir NF
+```
+
+#### **SEM Autorização:**
+❌ Fiscal NÃO pode emitir Nota Fiscal
+❌ Financeiro NÃO tem garantia de recebimento
+❌ Guia fica "pendente" indefinidamente
+
+#### **Exemplo Real:**
+Guia #8210 - R$ 39.074,43 - XML enviado 13/11/2025 - Aguardando autorização UNIMED SUL MINEIRA
+
+---
+
+### 8.5 DEPENDÊNCIA 4: FISCAL/CONTABILIDADE (Emissão de NF) 📄
+
+#### **Importância para Faturamento:**
+Nota Fiscal é o **DOCUMENTO LEGAL** que formaliza a cobrança. Sem NF = Sem legalidade para cobrar.
+
+#### **Fluxo de Dados:**
+```
+Autorização recebida → Jeca Tatu informa Fiscal → Fiscal emite NF → Jeca Tatu vincula NF à guia
+```
+
+#### **Dados que Jeca Tatu FORNECE para Fiscal:**
+- 📦 Número da guia (ex: #8210)
+- 📦 Paciente e operadora
+- 📦 Valor AUTORIZADO (não o solicitado)
+- 📦 Descritivo dos procedimentos
+- 📦 Código de autorização da operadora
+- 📦 Data do atendimento
+
+#### **Dados que Jeca Tatu RECEBE de volta:**
+- ✅ Número da Nota Fiscal
+- ✅ Data de emissão
+- ✅ Chave de acesso NFe
+- ✅ XML da NF (para enviar à operadora se necessário)
+
+#### **Relatório Integrado:**
+Sistema possui relatório **"Espelho fiscal"** para controle conjunto Jeca Tatu + Fiscal.
+
+#### **SEM Nota Fiscal:**
+❌ Operação ILEGAL perante Receita Federal
+❌ Operadora pode RECUSAR pagamento
+❌ Hospital não pode deduzir impostos
+❌ Auditoria externa pode multar
+
+#### **Comunicação:**
+```
+Jeca Tatu: "Guia #8210 autorizada - R$ 39.074,43 - Pode emitir NF"
+Fiscal: Emite NF #12345 e retorna dados
+Jeca Tatu: Vincula NF #12345 → Guia #8210 → Libera para Financeiro
+```
+
+---
+
+### 8.6 DEPENDÊNCIA 5: FINANCEIRO (Recebimento) 💵
+
+#### **Importância para Faturamento:**
+Financeiro é o **DESTINO FINAL**. Todo o trabalho de Jeca Tatu culmina aqui: o **RECEBIMENTO**.
+
+#### **Fluxo de Dados:**
+```
+NF emitida → Jeca Tatu informa Financeiro → Financeiro registra conta a receber → Monitora pagamento → Baixa quando recebe
+```
+
+#### **Dados que Jeca Tatu FORNECE para Financeiro (Pica-Pau):**
+- 💰 Guia #8210
+- 💰 NF #12345
+- 💰 Operadora: UNIMED SUL MINEIRA
+- 💰 Valor a receber: R$ 39.074,43
+- 💰 Data de vencimento esperada
+- 💰 Número da autorização
+
+#### **Dados REAIS do Sistema:**[screenshot:86]
+- **113 contas vencidas** - R$ 124.178,22
+- 0 vencendo hoje - R$ 0
+- Total: 116 contas a receber registradas
+
+#### **Exemplos de Contas a Receber:**
+- ID 6869 - LUIS GUSTAVO DE FARIA - R$ 386,10 (10/01/2025)
+- ID 6870 - LUIS GUSTAVO DE FARIA - R$ 1.123,20 (10/12/2024) 
+- ID 7134 - ADÉLIA ARRELARO - R$ 1.575,36 (10/02/2025)
+
+#### **Relatório Compartilhado:**
+**"Previsto x Faturado"** - usado por Jeca Tatu E Pica-Pau para acompanhar:
+- Quanto foi faturado?
+- Quanto foi autorizado?
+- Quanto foi efetivamente recebido?
+
+#### **SEM Financeiro:**
+❌ Todo trabalho do Faturamento é INÚTIL
+❌ Não há controle de recebimento
+❌ Operadoras inadimplentes não são identificadas
+❌ Fluxo de caixa do hospital colapsa
+
+#### **Comunicação Crítica:**
+```
+🚨 Pica-Pau → Jeca Tatu
+"Operadora FUSEX POUSO com 3+ faturas vencidas (R$ 50k)"
+Ação: Jeca Tatu SUSPENDE emissão de novas guias até regularização
+```
+
+---
+
+### 8.7 MAPA VISUAL DO CICLO COMPLETO
+
+```
+🏁 INÍCIO
+    │
+    │  1️⃣ ORÇAMENTOS
+    │     │
+    │     └── Paciente atendido
+    │         Operadora aprova
+    │         Orçamento #64321
+    │
+    ▼
+📦 JECA TATU (Faturamento)
+    │
+    ├── Emite guia #8210
+    ├── Gera XML (Lote 27146)
+    ├── Envia para operadora
+    │
+    ▼
+    │  2️⃣ AUDITORIA
+    │     │
+    │     └── Valida códigos TISS
+    │         Revisa CID10
+    │         Aprova/Solicita correção
+    │
+    ▼
+    │  3️⃣ AUTORIZAÇÕES
+    │     │
+    │     └── Operadora analisa
+    │         Autorização #123456
+    │         Valor aprovado: R$ 39.074,43
+    │
+    ▼
+    │  4️⃣ FISCAL (NF)
+    │     │
+    │     └── Emite NF #12345
+    │         Chave NFe: 35210...
+    │         Documento legal OK
+    │
+    ▼
+    │  5️⃣ FINANCEIRO
+    │     │
+    │     └── Conta a receber ID 6869
+    │         Monitora pagamento
+    │         Baixa quando recebe
+    │
+    ▼
+🏆 FIM: RECEITA REALIZADA
+```
+
+---
+
+### 8.8 MATRIZ DE CRITICIDADE
+
+| Setor | Criticidade | Se falhar, Jeca Tatu... | Impacto no Hospital |
+|-------|------------|------------------------|---------------------|
+| **Orçamentos** | 🔴 CRÍTICA | NÃO pode iniciar nada | Sem atendimento = Sem receita |
+| **Auditoria** | 🟡 ALTA | Risco de glosa | Perda de 20-40% da receita |
+| **Autorizações** | 🔴 CRÍTICA | Guias ficam pendentes | Receita travada |
+| **Fiscal (NF)** | 🔴 CRÍTICA | Operação ilegal | Multas + Impossibilidade de cobrar |
+| **Financeiro** | 🔴 CRÍTICA | Receita não realizada | Hospital quebra |
+
+---
+
+### 8.9 CONCLUSÃO: JECA TATU É UM ORQUESTRADOR
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│  🎼 JECA TATU = MAESTRO DO FATURAMENTO                    │
+│                                                              │
+│  "Não sou apenas um emissor de guias.                        │
+│   Sou o ELO que conecta o atendimento clínico                │
+│   à receita financeira do hospital."                        │
+│                                                              │
+│  🔗 Dependo de 5 setores para executar minha função       │
+│  🤝 Cada setor precisa de mim para completar seu ciclo    │
+│  ⚠️  Se qualquer um falhar, o hospital perde receita       │
+│                                                              │
+│  🎯 Minha responsabilidade:                                 │
+│     - Garantir que TODOS os dados estejam corretos          │
+│     - Comunicar proativamente com todos os setores          │
+│     - Monitorar o ciclo completo: Orçamento → Recebimento   │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 8.10 CHECKLIST DIÁRIO DO JECA TATU
+
+#### 🌅 Manhã (09:00)
+- [ ] Verificar orçamentos aprovados (novos)
+- [ ] Revisar guias pendentes de emissão
+- [ ] Checar alertas de Auditoria
+
+#### ☀️ Tarde (14:00)
+- [ ] Monitorar autorizações recebidas
+- [ ] Enviar XMLs pendentes
+- [ ] Comunicar Fiscal sobre NFs a emitir
+
+#### 🌙 Fim do dia (17:00)
+- [ ] Atualizar Pica-Pau sobre contas a receber
+- [ ] Verificar operadoras inadimplentes
+- [ ] Revisar relatório "Previsto x Faturado"
+
+---
+
+**FIM DA SEÇÃO 8 - DEPENDÊNCIAS CRÍTICAS**
+
+*"Aprendi que Faturamento não é um setor isolado. É o coração que bombeia a receita do hospital, mas precisa de todos os outros órgãos funcionando perfeitamente."* - Jeca Tatu
