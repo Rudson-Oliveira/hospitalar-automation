@@ -43,3 +43,29 @@
 - Sicoob (API)
 
 *Atualizado: 21/01/2026*
+
+
+---
+
+## PADRAO ZERO ERRO (v2.0 - 23/01/2026)
+
+### Regra de Ouro:
+**PLANEJAR > EXECUTAR > VERIFICAR**
+
+### Bloqueios Automaticos:
+- Dados divergentes
+- Documento ausente
+- Duplicidade suspeita
+- Valor > R$10.000
+- Fornecedor novo
+
+### Evidencia Obrigatoria:
+- Print de tela
+- Anexo (NF/boleto)
+- Referencia no sistema
+
+### Links Importantes:
+- Regras completas: PADRAO_ZERO_ERRO_FINANCEIRO.md
+- GitHub: https://github.com/Rudson-Oliveira/FINANCEIRO-16-01-26
+
+*Prioridade: PRECISAO > VELOCIDADE*
